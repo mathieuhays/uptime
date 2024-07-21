@@ -17,7 +17,8 @@ func main() {
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           router,
-		ReadHeaderTimeout: time.Minute,
+		ReadHeaderTimeout: time.Second * 5,
+		WriteTimeout:      time.Second * 5,
 	}
 
 	log.Printf("Starting server on %s", addr)

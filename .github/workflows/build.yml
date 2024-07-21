@@ -1,0 +1,35 @@
+name: build
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Formatting
+        run: test -z $(go fmt ./...)
+
+      - name: Build
+        run: |
+          go mod tidy
+          go build -v ./...
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...

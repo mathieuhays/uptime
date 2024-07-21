@@ -2,12 +2,12 @@ package uptime
 
 import "net/http"
 
-type Server struct {
+type Router struct {
 	http.Handler
 }
 
-func NewServer() (*Server, error) {
-	s := new(Server)
+func NewRouter() (*Router, error) {
+	s := new(Router)
 
 	router := http.NewServeMux()
 	router.Handle("GET /", http.HandlerFunc(renderHomepage))

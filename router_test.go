@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestServerHomepage(t *testing.T) {
-	server, err := NewServer()
+func TestRouterHomepage(t *testing.T) {
+	server, err := NewRouter()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -26,8 +26,8 @@ func TestServerHomepage(t *testing.T) {
 	}
 }
 
-func TestServerApiHealth(t *testing.T) {
-	server, err := NewServer()
+func TestRouterApiHealth(t *testing.T) {
+	server, err := NewRouter()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}

@@ -1,4 +1,4 @@
-include: .env
+include .env
 
 install_deps:
 	go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -10,5 +10,5 @@ update_sql:
 down: #migrate down
 	cd sql/schema && goose postgres ${DATABASE_URL} down
 
-up: #migrate down
+up: #migrate up
 	cd sql/schema && goose postgres ${DATABASE_URL} up

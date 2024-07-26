@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const testJwtSecret = "vCAeARsc/ZCXxfVm+2E3Ke0vaNodqVuybZASfxy9Q4IZb+rPWm4ciyIB56uGrdrZMwrxZG7OBWPlyNzFyipGWQ=="
+const testJwtSecret = "vCAeARsc/ZCXxfVm+2E3Ke0vaNodqVuybZASfxy9Q4IZb+rPWm4ciyIB56uGrdrZMwrxZG7OBWPlyNzFyipGWQ==" // #nosec G101
 
 func assertStatus(t testing.TB, response *httptest.ResponseRecorder, want int) {
 	t.Helper()

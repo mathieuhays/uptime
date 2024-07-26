@@ -12,3 +12,6 @@ down: #migrate down
 
 up: #migrate up
 	cd sql/schema && goose postgres ${DATABASE_URL} up
+
+jwt_secret:
+	openssl rand -base64 64

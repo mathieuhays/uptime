@@ -7,7 +7,7 @@ import (
 )
 
 func TestRouterRoot(t *testing.T) {
-	router, err := NewRouter()
+	router, err := NewRouter(&ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -27,7 +27,7 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterAppHomepage(t *testing.T) {
-	router, err := NewRouter()
+	router, err := NewRouter(&ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -42,7 +42,7 @@ func TestRouterAppHomepage(t *testing.T) {
 }
 
 func TestRouterApiHealth(t *testing.T) {
-	router, err := NewRouter()
+	router, err := NewRouter(&ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/mathieuhays/uptime"
+	"github.com/mathieuhays/uptime/internal/database"
 	"log"
 	"net/http"
 	"os"
@@ -30,8 +31,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("missing env var: JWT_SECRET")
+	}
+
+	apiConfig, err := uptime.NewApiConfig(database.New(db), jwtSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	const addr = "localhost:8080"
-	router, err := uptime.NewRouter()
+	router, err := uptime.NewRouter(apiConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -4,12 +4,15 @@ import "net/http"
 
 type Router struct {
 	http.Handler
+	config *ApiConfig
 }
 
-func NewRouter() (*Router, error) {
+func NewRouter(config *ApiConfig) (*Router, error) {
 	s := new(Router)
 
 	router := http.NewServeMux()
+	s.Handler = router
+	s.config = config
 
 	router.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Location", "/app/")
@@ -19,7 +22,7 @@ func NewRouter() (*Router, error) {
 	router.Handle("GET /app/*", http.StripPrefix("/app/", http.FileServer(http.Dir("./static"))))
 	router.Handle("GET /api/v1/health", http.HandlerFunc(renderHealth))
 
-	s.Handler = router
+	router.Handle("POST /api/v1/users", http.HandlerFunc(config.handlerPostUsers))
 
 	return s, nil
 }

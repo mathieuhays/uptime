@@ -8,11 +8,7 @@ import (
 )
 
 func TestRouterRoot(t *testing.T) {
-	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
+	router := NewServer(log.Default(), nil, &ApiConfig{})
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 
@@ -28,11 +24,7 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterAppHomepage(t *testing.T) {
-	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
+	router := NewServer(log.Default(), nil, &ApiConfig{})
 	request, _ := http.NewRequest(http.MethodGet, "/app/", nil)
 	response := httptest.NewRecorder()
 
@@ -42,13 +34,9 @@ func TestRouterAppHomepage(t *testing.T) {
 	assertContentType(t, response, "text/html; charset=utf-8")
 }
 
-func TestRouterApiHealth(t *testing.T) {
-	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	request, _ := http.NewRequest(http.MethodGet, "/api/v1/health", nil)
+func TestRouterHealth(t *testing.T) {
+	router := NewServer(log.Default(), nil, &ApiConfig{})
+	request, _ := http.NewRequest(http.MethodGet, "/healthz", nil)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)

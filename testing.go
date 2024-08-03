@@ -6,6 +6,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/mathieuhays/uptime/internal/database"
 	"log"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -81,7 +82,7 @@ func assertProblemsResponse(t testing.TB, response *httptest.ResponseRecorder, f
 	}
 }
 
-func createTestRouter(t testing.TB) (*Router, *sql.DB, sqlmock.Sqlmock) {
+func createTestRouter(t testing.TB) (http.Handler, *sql.DB, sqlmock.Sqlmock) {
 	t.Helper()
 
 	db, mock, err := sqlmock.New()
@@ -94,10 +95,7 @@ func createTestRouter(t testing.TB) (*Router, *sql.DB, sqlmock.Sqlmock) {
 		t.Fatal(err)
 	}
 
-	router, err := NewRouter(log.Default(), database.New(db), config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	srv := NewServer(log.Default(), database.New(db), config)
 
-	return router, db, mock
+	return srv, db, mock
 }

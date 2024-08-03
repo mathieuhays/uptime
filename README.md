@@ -4,6 +4,11 @@
 
 Service tracking websites' uptime. WIP
 
+## TODO
+
+- [ ] Move DB interactions into stores
+- [ ] Add integration tests using `run()` in the server cmd pkg
+
 ## Development
 
 ### commands

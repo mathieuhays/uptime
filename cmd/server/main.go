@@ -10,6 +10,7 @@ import (
 	"github.com/mathieuhays/uptime/internal/database"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -44,20 +45,20 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 
 	logger := log.New(stderr, "", log.LstdFlags|log.Lshortfile)
 
-	const addr = "localhost:8080"
-	router, err := uptime.NewRouter(logger, dbQueries, apiConfig)
-	if err != nil {
-		return err
-	}
+	// should probably be configurable via env vars
+	const host = "localhost"
+	const port = "8080"
+
+	srv := uptime.NewServer(logger, dbQueries, apiConfig)
 
 	server := &http.Server{
-		Addr:              addr,
-		Handler:           router,
+		Addr:              net.JoinHostPort(host, port),
+		Handler:           srv,
 		ReadHeaderTimeout: time.Second * 5,
 		WriteTimeout:      time.Second * 5,
 	}
 
-	_, _ = fmt.Fprintf(stdout, "Starting server on %s\n", addr)
+	_, _ = fmt.Fprintf(stdout, "Starting server on %s\n", server.Addr)
 	if err = server.ListenAndServe(); err != nil {
 		return err
 	}

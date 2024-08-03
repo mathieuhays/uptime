@@ -1,6 +1,7 @@
 package uptime
 
 import (
+	"context"
 	"errors"
 	"net/mail"
 	"strings"
@@ -13,6 +14,10 @@ var (
 	errPasswordTooShort = errors.New("password is too short")
 	errPasswordTooLong  = errors.New("password is too long")
 )
+
+type Validator interface {
+	Valid(ctx context.Context) (problems map[string]string)
+}
 
 func validateEmail(email string) error {
 	if email == "" {

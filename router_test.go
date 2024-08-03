@@ -1,13 +1,14 @@
 package uptime
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 func TestRouterRoot(t *testing.T) {
-	router, err := NewRouter(&ApiConfig{})
+	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -27,7 +28,7 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterAppHomepage(t *testing.T) {
-	router, err := NewRouter(&ApiConfig{})
+	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -42,7 +43,7 @@ func TestRouterAppHomepage(t *testing.T) {
 }
 
 func TestRouterApiHealth(t *testing.T) {
-	router, err := NewRouter(&ApiConfig{})
+	router, err := NewRouter(log.Default(), nil, &ApiConfig{})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}

@@ -2,49 +2,52 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/mathieuhays/uptime"
 	"github.com/mathieuhays/uptime/internal/database"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
 )
 
-func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
-
-	dbURL := os.Getenv("DATABASE_URL")
+func run(getenv func(string) string, stdout, stderr io.Writer) error {
+	dbURL := getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("missing env var: DATABASE_URL")
+		return errors.New("missing env var: DATABASE_URL")
 	}
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err = uptime.Migrate(db); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		log.Fatal("missing env var: JWT_SECRET")
+		return errors.New("missing env var: JWT_SECRET")
 	}
 
-	apiConfig, err := uptime.NewApiConfig(database.New(db), jwtSecret)
+	dbQueries := database.New(db)
+
+	apiConfig, err := uptime.NewApiConfig(jwtSecret)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	logger := log.New(stderr, "", log.LstdFlags|log.Lshortfile)
 
 	const addr = "localhost:8080"
-	router, err := uptime.NewRouter(apiConfig)
+	router, err := uptime.NewRouter(logger, dbQueries, apiConfig)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	server := &http.Server{
@@ -54,6 +57,21 @@ func main() {
 		WriteTimeout:      time.Second * 5,
 	}
 
-	log.Printf("Starting server on %s", addr)
-	log.Fatal(server.ListenAndServe())
+	_, _ = fmt.Fprintf(stdout, "Starting server on %s\n", addr)
+	if err = server.ListenAndServe(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := run(os.Getenv, os.Stdout, os.Stderr); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }

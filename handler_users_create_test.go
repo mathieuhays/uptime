@@ -26,7 +26,7 @@ func TestHandlerPostUsers(t *testing.T) {
 
 		assertStatus(t, response, http.StatusBadRequest)
 		assertJSONContentType(t, response)
-		assertFieldErrorResponse(t, response, "email", errEmailInvalid.Error())
+		assertProblemsResponse(t, response, "email", errEmailInvalid.Error())
 
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Errorf("expectations not met: %s", err.Error())
@@ -47,7 +47,7 @@ func TestHandlerPostUsers(t *testing.T) {
 
 		assertStatus(t, response, http.StatusBadRequest)
 		assertJSONContentType(t, response)
-		assertFieldErrorResponse(t, response, "email", errEmailAlreadyUsed.Error())
+		assertProblemsResponse(t, response, "email", errEmailAlreadyUsed.Error())
 
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Errorf("expectations not met: %s", err.Error())
@@ -59,18 +59,11 @@ func TestHandlerPostUsers(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
 		response := httptest.NewRecorder()
 
-		mock.ExpectQuery("SELECT id, name, email, password, created_at, updated_at FROM users WHERE email").
-			WillReturnError(sql.ErrNoRows)
-
 		router.ServeHTTP(response, request)
 
 		assertStatus(t, response, http.StatusBadRequest)
 		assertJSONContentType(t, response)
-		assertFieldErrorResponse(t, response, "password", errPasswordTooShort.Error())
-
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Errorf("expectations not met: %s", err.Error())
-		}
+		assertProblemsResponse(t, response, "password", errPasswordTooShort.Error())
 	})
 
 	t.Run("password too long", func(t *testing.T) {
@@ -86,7 +79,7 @@ func TestHandlerPostUsers(t *testing.T) {
 
 		assertStatus(t, response, http.StatusBadRequest)
 		assertJSONContentType(t, response)
-		assertFieldErrorResponse(t, response, "password", errPasswordTooLong.Error())
+		assertProblemsResponse(t, response, "password", errPasswordTooLong.Error())
 
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Errorf("expectations not met: %s", err.Error())
@@ -109,7 +102,7 @@ func TestHandlerPostUsers(t *testing.T) {
 		userId := uuid.New()
 		userRows := sqlmock.NewRows([]string{"id", "name", "email", "password", "created_at", "updated_at"}).
 			AddRow(userId, userName, userEmail, "hash", time.Now(), time.Now())
-		mock.ExpectQuery("INSERT INTO users \\(id, name, email, password, created_at, updated_at\\) VALUES").
+		mock.ExpectQuery("INSERT INTO users \\(id, name, email, password, created_at, updated_at\\)").
 			WillReturnRows(userRows)
 
 		sessionRows := sqlmock.NewRows([]string{"id", "user_id", "refresh_token", "expire_at", "created_at", "updated_at"}).

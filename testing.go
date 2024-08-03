@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/mathieuhays/uptime/internal/database"
+	"log"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -40,15 +41,15 @@ func assertBodyContains(t testing.TB, response *httptest.ResponseRecorder, want 
 	}
 }
 
-func assertFieldErrorResponse(t testing.TB, response *httptest.ResponseRecorder, fieldWanted string, messageWanted string) {
+func assertProblemsResponse(t testing.TB, response *httptest.ResponseRecorder, fieldWanted string, messageWanted string) {
 	t.Helper()
-	var data FieldErrorResponse
+	var data ErrorResponseWithProblems
 	err := json.NewDecoder(response.Body).Decode(&data)
 	if err != nil {
 		t.Fatalf("Couldn't decode Field Error response: %s", err)
 	}
 
-	if len(data.Errors) == 0 {
+	if len(data.Problems) == 0 {
 		t.Errorf("Empty field error response. got: %v", response.Body.String())
 		return
 	}
@@ -57,13 +58,13 @@ func assertFieldErrorResponse(t testing.TB, response *httptest.ResponseRecorder,
 	foundMessage := false
 	var fieldNames []string
 
-	for _, fieldError := range data.Errors {
-		fieldNames = append(fieldNames, fieldError.Field)
+	for fieldName, message := range data.Problems {
+		fieldNames = append(fieldNames, fieldName)
 
-		if fieldError.Field == fieldWanted {
+		if fieldName == fieldWanted {
 			foundField = true
 
-			if fieldError.Message == messageWanted {
+			if message == messageWanted {
 				foundMessage = true
 			}
 
@@ -88,12 +89,12 @@ func createTestRouter(t testing.TB) (*Router, *sql.DB, sqlmock.Sqlmock) {
 		t.Fatal(err)
 	}
 
-	config, err := NewApiConfig(database.New(db), testJwtSecret)
+	config, err := NewApiConfig(testJwtSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	router, err := NewRouter(config)
+	router, err := NewRouter(log.Default(), database.New(db), config)
 	if err != nil {
 		t.Fatal(err)
 	}

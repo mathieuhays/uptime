@@ -13,15 +13,6 @@ import (
 	"time"
 )
 
-type FieldError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
-type FieldErrorResponse struct {
-	Errors []FieldError `json:"errors"`
-}
-
 var (
 	errEmailAlreadyUsed = errors.New("an account is already associated with that email")
 )

@@ -42,8 +42,7 @@ func (s *StubSessionStore) Create(ctx context.Context, userID uuid.UUID) (databa
 
 func TestHandlerPostUsers(t *testing.T) {
 	t.Run("email invalid", func(t *testing.T) {
-
-		server := NewServer(log.Default(), &UserStore{}, &SessionStore{}, &ApiConfig{})
+		server := handleUsersPost(log.Default(), &UserStore{}, &SessionStore{}, &ApiConfig{})
 		bodyReader := bytes.NewReader([]byte(`{"name":"John doe","email":"john_doe.com","password":"test123"}`))
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
 		response := httptest.NewRecorder()

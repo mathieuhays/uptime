@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/mathieuhays/uptime/internal/auth"
-	"github.com/mathieuhays/uptime/internal/database"
 	"github.com/mathieuhays/uptime/internal/token"
 	"net/http"
 )
@@ -14,7 +13,7 @@ type ContextKey string
 
 const ContextUserKey ContextKey = "user"
 
-func makeRequireAuthMiddleware(db *database.Queries, jwtSecret string) func(h http.Handler) http.Handler {
+func makeRequireAuthMiddleware(userStore *UserStore, jwtSecret string) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accessToken, err := auth.GetAuthorization(r.Header)
@@ -27,7 +26,7 @@ func makeRequireAuthMiddleware(db *database.Queries, jwtSecret string) func(h ht
 
 			// @TODO add check for cookies if authorization header is not set
 
-			userId, err := token.Verify(accessToken.Value, jwtSecret)
+			userID, err := token.Verify(accessToken.Value, jwtSecret)
 			if err != nil {
 				_ = encode(w, r, http.StatusUnauthorized, ErrorResponse{
 					Message: "expired or invalid token",
@@ -35,7 +34,7 @@ func makeRequireAuthMiddleware(db *database.Queries, jwtSecret string) func(h ht
 				return
 			}
 
-			user, err := db.GetUserById(r.Context(), userId)
+			user, err := userStore.GetByID(r.Context(), userID)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
 					_ = encode(w, r, http.StatusUnauthorized, ErrorResponse{Message: "invalid user"})

@@ -49,7 +49,10 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 	const host = "localhost"
 	const port = "8080"
 
-	srv := uptime.NewServer(logger, dbQueries, apiConfig)
+	userStore := uptime.NewUserStore(dbQueries)
+	sessionStore := uptime.NewSessionStore(dbQueries, apiConfig)
+
+	srv := uptime.NewServer(logger, userStore, sessionStore, apiConfig)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort(host, port),

@@ -95,7 +95,11 @@ func createTestRouter(t testing.TB) (http.Handler, *sql.DB, sqlmock.Sqlmock) {
 		t.Fatal(err)
 	}
 
-	srv := NewServer(log.Default(), database.New(db), config)
+	dbQueries := database.New(db)
+	userStore := NewUserStore(dbQueries)
+	sessionStore := NewSessionStore(dbQueries, config)
+
+	srv := NewServer(log.Default(), userStore, sessionStore, config)
 
 	return srv, db, mock
 }

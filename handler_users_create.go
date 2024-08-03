@@ -4,13 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/mathieuhays/uptime/internal/database"
 	"github.com/mathieuhays/uptime/internal/token"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"time"
 )
 
 var (
@@ -51,7 +48,7 @@ func (r PostUserRequest) Valid(ctx context.Context) (problems map[string]string)
 	return problems
 }
 
-func handleUsersPost(logger *log.Logger, db *database.Queries, config *ApiConfig) http.Handler {
+func handleUsersPost(logger *log.Logger, userStore *UserStore, sessionStore *SessionStore, config *ApiConfig) http.Handler {
 	type response struct {
 		User         User   `json:"user"`
 		RefreshToken string `json:"refresh_token"`
@@ -67,7 +64,7 @@ func handleUsersPost(logger *log.Logger, db *database.Queries, config *ApiConfig
 			_ = encode(w, r, http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 		}
 
-		_, err = db.GetUserByEmail(r.Context(), userDetails.Email)
+		_, err = userStore.GetByEmail(r.Context(), userDetails.Email)
 		if err == nil {
 			_ = encode(w, r, http.StatusBadRequest, ErrorResponseWithProblems{
 				Problems: map[string]string{"email": errEmailAlreadyUsed.Error()},
@@ -98,14 +95,7 @@ func handleUsersPost(logger *log.Logger, db *database.Queries, config *ApiConfig
 			return
 		}
 
-		user, err := db.CreateUser(r.Context(), database.CreateUserParams{
-			ID:        uuid.New(),
-			Name:      userDetails.Name,
-			Email:     userDetails.Email,
-			Password:  string(encryptedPassword),
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-		})
+		user, err := userStore.Create(r.Context(), userDetails.Name, userDetails.Email, string(encryptedPassword))
 		if err != nil {
 			logger.Printf("post users: CreateUser err: %s", err)
 			_ = encode(w, r, http.StatusInternalServerError, ErrorResponse{
@@ -114,13 +104,7 @@ func handleUsersPost(logger *log.Logger, db *database.Queries, config *ApiConfig
 			return
 		}
 
-		session, err := db.CreateSession(r.Context(), database.CreateSessionParams{
-			ID:        uuid.New(),
-			UserID:    user.ID,
-			ExpireAt:  time.Now().Add(config.sessionDuration).UTC(),
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-		})
+		session, err := sessionStore.Create(r.Context(), user.ID)
 		if err != nil {
 			logger.Printf("create_user: session error: %s", err)
 			_ = encode(w, r, http.StatusInternalServerError, ErrorResponse{

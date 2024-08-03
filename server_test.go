@@ -8,7 +8,7 @@ import (
 )
 
 func TestRouterRoot(t *testing.T) {
-	router := NewServer(log.Default(), nil, &ApiConfig{})
+	router := NewServer(log.Default(), nil, nil, &ApiConfig{})
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 
@@ -24,7 +24,7 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterAppHomepage(t *testing.T) {
-	router := NewServer(log.Default(), nil, &ApiConfig{})
+	router := NewServer(log.Default(), nil, nil, &ApiConfig{})
 	request, _ := http.NewRequest(http.MethodGet, "/app/", nil)
 	response := httptest.NewRecorder()
 
@@ -35,17 +35,22 @@ func TestRouterAppHomepage(t *testing.T) {
 }
 
 func TestRouterHealth(t *testing.T) {
-	router := NewServer(log.Default(), nil, &ApiConfig{})
+	router := NewServer(log.Default(), nil, nil, &ApiConfig{})
 	request, _ := http.NewRequest(http.MethodGet, "/healthz", nil)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)
 
-	if response.Code != http.StatusOK {
-		t.Errorf("unexpected status code. expected: 200. got: %d", response.Code)
-	}
+	assertStatus(t, response, http.StatusOK)
+	assertJSONContentType(t, response)
+}
 
-	if response.Header().Get("Content-Type") != "application/json" {
-		t.Errorf("wrong content type. expected: application/json. got: %s", response.Header().Get("Content-Type"))
-	}
+func TestRouterNotFound(t *testing.T) {
+	router := NewServer(log.Default(), nil, nil, &ApiConfig{})
+	request, _ := http.NewRequest(http.MethodGet, "/lksjdflskdjf", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assertStatus(t, response, http.StatusNotFound)
 }

@@ -8,8 +8,8 @@ import (
 func addRoutes(
 	mux *http.ServeMux,
 	logger *log.Logger,
-	userStore *UserStore,
-	sessionStore *SessionStore,
+	userStore UserStoreInterface,
+	sessionStore SessionStoreInterface,
 	config *ApiConfig,
 ) {
 	requireAuth := makeRequireAuthMiddleware(userStore, config.jwtSecret)

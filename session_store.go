@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type SessionStoreInterface interface {
+	Create(ctx context.Context, userID uuid.UUID) (database.Session, error)
+}
+
 type SessionStore struct {
 	db     *database.Queries
 	config *ApiConfig

@@ -13,7 +13,7 @@ type ContextKey string
 
 const ContextUserKey ContextKey = "user"
 
-func makeRequireAuthMiddleware(userStore *UserStore, jwtSecret string) func(h http.Handler) http.Handler {
+func makeRequireAuthMiddleware(userStore UserStoreInterface, jwtSecret string) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accessToken, err := auth.GetAuthorization(r.Header)

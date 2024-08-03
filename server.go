@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func NewServer(logger *log.Logger, userStore *UserStore, sessionStore *SessionStore, config *ApiConfig) http.Handler {
+func NewServer(logger *log.Logger, userStore UserStoreInterface, sessionStore SessionStoreInterface, config *ApiConfig) http.Handler {
 	mux := http.NewServeMux()
 	addRoutes(
 		mux,

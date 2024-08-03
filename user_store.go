@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type UserStoreInterface interface {
+	Create(ctx context.Context, name, email, encryptedPassword string) (database.User, error)
+	GetByEmail(ctx context.Context, email string) (database.User, error)
+	GetByID(ctx context.Context, userID uuid.UUID) (database.User, error)
+}
+
 type UserStore struct {
 	db *database.Queries
 }

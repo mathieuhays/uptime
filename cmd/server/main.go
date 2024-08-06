@@ -45,6 +45,11 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 
 	logger := log.New(stderr, "", log.LstdFlags|log.Lshortfile)
 
+	templ, err := uptime.GetTemplateEngine()
+	if err != nil {
+		return err
+	}
+
 	// should probably be configurable via env vars
 	const host = "localhost"
 	const port = "8080"
@@ -52,7 +57,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 	userStore := uptime.NewUserStore(dbQueries)
 	sessionStore := uptime.NewSessionStore(dbQueries, apiConfig)
 
-	srv := uptime.NewServer(logger, userStore, sessionStore, apiConfig)
+	srv := uptime.NewServer(logger, templ, userStore, sessionStore, apiConfig)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort(host, port),

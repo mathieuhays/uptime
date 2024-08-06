@@ -99,7 +99,7 @@ func createTestRouter(t testing.TB) (http.Handler, *sql.DB, sqlmock.Sqlmock) {
 	userStore := NewUserStore(dbQueries)
 	sessionStore := NewSessionStore(dbQueries, config)
 
-	srv := NewServer(log.Default(), userStore, sessionStore, config)
+	srv := NewServer(log.Default(), nil, userStore, sessionStore, config)
 
 	return srv, db, mock
 }

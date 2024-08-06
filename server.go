@@ -1,15 +1,17 @@
 package uptime
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 )
 
-func NewServer(logger *log.Logger, userStore UserStoreInterface, sessionStore SessionStoreInterface, config *ApiConfig) http.Handler {
+func NewServer(logger *log.Logger, templ *template.Template, userStore UserStoreInterface, sessionStore SessionStoreInterface, config *ApiConfig) http.Handler {
 	mux := http.NewServeMux()
 	addRoutes(
 		mux,
 		logger,
+		templ,
 		userStore,
 		sessionStore,
 		config,

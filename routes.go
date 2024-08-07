@@ -18,8 +18,9 @@ func addRoutes(
 
 	mux.Handle("/*", handleHome(logger, templ))
 	mux.Handle("/login", handleLogin(logger, templ))
+	mux.Handle("/register", handleRegisterHTML(templ, userStore, sessionStore))
 	mux.Handle("GET /static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	mux.Handle("POST /api/v1/users", handleUsersPost(logger, userStore, sessionStore, config))
+	mux.Handle("POST /api/v1/users", handleUsersPost(userStore, sessionStore, config))
 	mux.Handle("GET /api/v1/refresh", requireAuth(renderRefresh()))
 	mux.Handle("GET /healthz", renderHealth())
 }

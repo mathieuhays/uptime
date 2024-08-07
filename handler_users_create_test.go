@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/database"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -42,7 +41,7 @@ func (s *StubSessionStore) Create(ctx context.Context, userID uuid.UUID) (databa
 
 func TestHandlerPostUsers(t *testing.T) {
 	t.Run("email invalid", func(t *testing.T) {
-		server := handleUsersPost(log.Default(), &UserStore{}, &SessionStore{}, &ApiConfig{})
+		server := handleUsersPost(&UserStore{}, &SessionStore{}, &ApiConfig{})
 		bodyReader := bytes.NewReader([]byte(`{"name":"John doe","email":"john_doe.com","password":"test123"}`))
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
 		response := httptest.NewRecorder()
@@ -70,7 +69,7 @@ func TestHandlerPostUsers(t *testing.T) {
 			return database.User{}, errors.New("unexpected state")
 		}}
 
-		handler := handleUsersPost(log.Default(), userStore, &StubSessionStore{}, &ApiConfig{})
+		handler := handleUsersPost(userStore, &StubSessionStore{}, &ApiConfig{})
 
 		bodyReader := bytes.NewReader([]byte(`{"name":"John doe","email":"john@doe.com","password":"test123"}`))
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
@@ -84,7 +83,7 @@ func TestHandlerPostUsers(t *testing.T) {
 	})
 
 	t.Run("password too short", func(t *testing.T) {
-		handler := handleUsersPost(log.Default(), &StubUserStore{}, &StubSessionStore{}, &ApiConfig{})
+		handler := handleUsersPost(&StubUserStore{}, &StubSessionStore{}, &ApiConfig{})
 		bodyReader := bytes.NewReader([]byte(`{"name":"John doe","email":"john@doe.com","password":"test"}`))
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
 		response := httptest.NewRecorder()
@@ -97,7 +96,7 @@ func TestHandlerPostUsers(t *testing.T) {
 	})
 
 	t.Run("password too long", func(t *testing.T) {
-		handler := handleUsersPost(log.Default(), &StubUserStore{}, &StubSessionStore{}, &ApiConfig{})
+		handler := handleUsersPost(&StubUserStore{}, &StubSessionStore{}, &ApiConfig{})
 		password := strings.Repeat("é", 72)
 		bodyReader := bytes.NewReader([]byte(`{"name":"John doe","email":"john@doe.com","password":"` + password + `"}`))
 		request, _ := http.NewRequest(http.MethodPost, "/api/v1/users", bodyReader)
@@ -145,7 +144,7 @@ func TestHandlerPostUsers(t *testing.T) {
 			}, nil
 		}}
 
-		handler := handleUsersPost(log.Default(), userStore, sessionStore, &ApiConfig{})
+		handler := handleUsersPost(userStore, sessionStore, &ApiConfig{})
 
 		bodyReader := bytes.NewReader([]byte(fmt.
 			Sprintf("{\"name\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", userName, userEmail, userPass)))

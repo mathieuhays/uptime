@@ -1,0 +1,51 @@
+{{template "header" .}}
+
+<h1>Register</h1>
+
+{{with .MainError}}
+    <div class="alert alert-danger" role="alert">{{.}}</div>
+{{end}}
+
+<form action="/register" method="post" hx-post="/register" id="register" hx-select="#register">
+    <div class="mb-3">
+        <label for="name-field" class="form-label">Name</label>
+        <input type="text"
+               class="form-control {{if .Fields.name.Error}}is-invalid{{end}}"
+               id="name-field"
+               name="name"
+               {{if .Fields.name.Error}}aria-describedby="name-help"{{end}}
+               value="{{.Fields.name.Value}}"
+               required>
+        {{with .Fields.name.Error}}
+            <div id="name-help" class="invalid-feedback">{{.}}</div>
+        {{end}}
+    </div>
+    <div class="mb-3">
+        <label for="email-field" class="form-label">Email address</label>
+        <input type="email"
+               class="form-control {{if .Fields.email.Error}}is-invalid{{end}}"
+               id="email-field"
+               name="email"
+               {{if .Fields.email.Error}}aria-describedby="email-help"{{end}}
+               value="{{.Fields.email.Value}}"
+               required>
+        {{with .Fields.email.Error}}
+            <div id="email-help" class="invalid-feedback">{{.}}</div>
+        {{end}}
+    </div>
+    <div class="mb-3">
+        <label for="password-field" class="form-label">Password</label>
+        <input type="password"
+               class="form-control {{if .Fields.password.Error}}is-invalid{{end}}"
+               id="password-field"
+               name="password"
+               {{if .Fields.password.Error}}aria-describedby="password-help"{{end}}
+               required>
+        {{with .Fields.password.Error}}
+            <div id="password-help" class="invalid-feedback">{{.}}</div>
+        {{end}}
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+</form>
+
+{{template "footer"}}

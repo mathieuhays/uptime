@@ -1,6 +1,7 @@
 package uptime
 
 import (
+	"github.com/mathieuhays/uptime/internal/database"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,9 +16,12 @@ func addRoutes(
 	config *ApiConfig,
 ) {
 	requireAuth := makeRequireAuthMiddleware(userStore, config.jwtSecret)
+	requireLogin := makeRequireLogin(userStore, sessionStore)
 
-	mux.Handle("/*", handleHome(logger, templ))
-	mux.Handle("/login", handleLogin(logger, templ))
+	mux.Handle("/", requireLogin(handleHome()))
+	mux.Handle("GET /dashboard", requireLogin(handleDashboard(logger, templ)))
+	mux.Handle("/login", handleLogin(templ, userStore, sessionStore))
+	mux.Handle("/logout", handleLogout())
 	mux.Handle("/register", handleRegisterHTML(templ, userStore, sessionStore))
 	mux.Handle("GET /static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	mux.Handle("POST /api/v1/users", handleUsersPost(userStore, sessionStore, config))
@@ -25,51 +29,31 @@ func addRoutes(
 	mux.Handle("GET /healthz", renderHealth())
 }
 
-func handleHome(logger *log.Logger, tmpl *template.Template) http.Handler {
+func handleHome() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
 
-		err := tmpl.ExecuteTemplate(w, "index.gohtml", struct {
-			PageTitle string
-		}{"Homepage"})
-		if err != nil {
-			logger.Println(err)
-		}
+		http.Redirect(w, r, "/dashboard", http.StatusTemporaryRedirect)
 	})
 }
 
-func handleLogin(logger *log.Logger, tmpl *template.Template) http.Handler {
-	type formField struct {
-		Value string
-		Error string
-	}
-
+func handleDashboard(logger *log.Logger, tmpl *template.Template) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var fields = map[string]formField{}
-
-		if r.Method == http.MethodPost {
-			// handle login action
-			email := r.FormValue("email")
-			emailField := formField{Value: email}
-
-			if err := validateEmail(email); err != nil {
-				emailField.Error = err.Error()
-			}
-
-			fields["email"] = emailField
-
-			// on success redirect to dashboard or something
+		user, ok := r.Context().Value(ContextUserKey).(database.User)
+		if !ok {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
 		}
 
-		err := tmpl.ExecuteTemplate(w, "login.gohtml", struct {
-			Fields    map[string]formField
+		err := tmpl.ExecuteTemplate(w, "index.gohtml", struct {
 			PageTitle string
-		}{Fields: fields, PageTitle: "Login"})
+			User      database.User
+		}{"Homepage", user})
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 	})
 }

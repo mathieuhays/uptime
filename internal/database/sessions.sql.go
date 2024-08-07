@@ -46,12 +46,12 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	return i, err
 }
 
-const getSessionByRefreshToken = `-- name: GetSessionByRefreshToken :one
-SELECT id, user_id, refresh_token, expire_at, created_at, updated_at FROM sessions WHERE refresh_token = $1 LIMIT 1
+const getSessionByID = `-- name: GetSessionByID :one
+SELECT id, user_id, refresh_token, expire_at, created_at, updated_at FROM sessions WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetSessionByRefreshToken(ctx context.Context, refreshToken string) (Session, error) {
-	row := q.db.QueryRowContext(ctx, getSessionByRefreshToken, refreshToken)
+func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error) {
+	row := q.db.QueryRowContext(ctx, getSessionByID, id)
 	var i Session
 	err := row.Scan(
 		&i.ID,
@@ -64,12 +64,12 @@ func (q *Queries) GetSessionByRefreshToken(ctx context.Context, refreshToken str
 	return i, err
 }
 
-const getSessionsByUserId = `-- name: GetSessionsByUserId :many
+const getSessionsByUserID = `-- name: GetSessionsByUserID :many
 SELECT id, user_id, refresh_token, expire_at, created_at, updated_at FROM sessions WHERE user_id = $1 ORDER BY id
 `
 
-func (q *Queries) GetSessionsByUserId(ctx context.Context, userID uuid.UUID) ([]Session, error) {
-	rows, err := q.db.QueryContext(ctx, getSessionsByUserId, userID)
+func (q *Queries) GetSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]Session, error) {
+	rows, err := q.db.QueryContext(ctx, getSessionsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}

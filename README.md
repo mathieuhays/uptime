@@ -7,9 +7,6 @@ Service tracking websites' uptime. WIP
 ## TODO
 
 - [ ] Add integration tests using `run()` in the server cmd pkg
-- [ ] Set cookie on login, refresh session expiration date?
-- [ ] template: login
-- [x] template: sign up
 - [ ] template: dashboard
 
 ## Development

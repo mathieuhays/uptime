@@ -4,11 +4,35 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/database"
+	"net/http"
 	"time"
 )
 
+const SessionCookie = "user_session"
+
+func getCookie(sessionID uuid.UUID) *http.Cookie {
+	return &http.Cookie{
+		Name:     SessionCookie,
+		Value:    sessionID.String(),
+		Path:     "/",
+		Expires:  time.Now().Add(time.Hour * 24),
+		HttpOnly: true,
+	}
+}
+
+func cancelCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:     SessionCookie,
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Now().Add(time.Hour * -1),
+		HttpOnly: true,
+	}
+}
+
 type SessionStoreInterface interface {
 	Create(ctx context.Context, userID uuid.UUID) (database.Session, error)
+	Get(ctx context.Context, sessionID uuid.UUID) (database.Session, error)
 }
 
 type SessionStore struct {
@@ -28,4 +52,8 @@ func (s *SessionStore) Create(ctx context.Context, userID uuid.UUID) (database.S
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
+}
+
+func (s *SessionStore) Get(ctx context.Context, sessionID uuid.UUID) (database.Session, error) {
+	return s.db.GetSessionByID(ctx, sessionID)
 }

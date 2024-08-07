@@ -32,11 +32,15 @@ func (s *StubUserStore) GetByID(ctx context.Context, userID uuid.UUID) (database
 }
 
 type StubSessionStore struct {
-	nextReturn func() (database.Session, error)
+	nextReturn func(id string) (database.Session, error)
 }
 
 func (s *StubSessionStore) Create(ctx context.Context, userID uuid.UUID) (database.Session, error) {
-	return s.nextReturn()
+	return s.nextReturn("create")
+}
+
+func (s *StubSessionStore) Get(ctx context.Context, sessionID uuid.UUID) (database.Session, error) {
+	return s.nextReturn("get")
 }
 
 func TestHandlerPostUsers(t *testing.T) {
@@ -133,7 +137,7 @@ func TestHandlerPostUsers(t *testing.T) {
 
 			return database.User{}, errors.New("unexpected state")
 		}}
-		sessionStore := &StubSessionStore{nextReturn: func() (database.Session, error) {
+		sessionStore := &StubSessionStore{nextReturn: func(id string) (database.Session, error) {
 			return database.Session{
 				ID:           uuid.New(),
 				UserID:       uuid.New(),

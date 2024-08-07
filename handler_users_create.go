@@ -9,7 +9,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"time"
 )
 
 var (
@@ -173,16 +172,7 @@ func handleRegisterHTML(tmpl *template.Template, userStore UserStoreInterface, s
 			} else if err != nil {
 				mainError = err.Error()
 			} else {
-				http.SetCookie(w, &http.Cookie{
-					Name:     "user_session",
-					Value:    session.ID.String(),
-					Path:     "/",
-					Expires:  time.Now().Add(24 * time.Hour),
-					HttpOnly: true,
-					SameSite: 1,
-				})
-				w.Header().Set("HX-Redirect", "/")
-				w.WriteHeader(http.StatusOK)
+				loginCookieRedirect(w, session.ID)
 				return
 			}
 		} else if r.Method != http.MethodGet {

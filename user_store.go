@@ -37,5 +37,5 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (database.User
 }
 
 func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (database.User, error) {
-	return s.db.GetUserById(ctx, userID)
+	return s.db.GetUserByID(ctx, userID)
 }

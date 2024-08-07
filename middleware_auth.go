@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/auth"
 	"github.com/mathieuhays/uptime/internal/token"
 	"net/http"
+	"time"
 )
 
 type ContextKey string
@@ -49,6 +51,46 @@ func makeRequireAuthMiddleware(userStore UserStoreInterface, jwtSecret string) f
 			ctx := context.WithValue(r.Context(), ContextUserKey, user)
 
 			h.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func makeRequireLogin(userStore UserStoreInterface, sessionStore SessionStoreInterface) func(h http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sessionCookie, err := r.Cookie("user_session")
+			if err != nil {
+				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+				return
+			}
+
+			sessionID, err := uuid.Parse(sessionCookie.Value)
+			if err != nil {
+				http.SetCookie(w, cancelCookie())
+				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+				return
+			}
+
+			session, err := sessionStore.Get(r.Context(), sessionID)
+			if err != nil {
+				http.SetCookie(w, cancelCookie())
+				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+				return
+			}
+
+			user, err := userStore.GetByID(r.Context(), session.UserID)
+			if err != nil {
+				http.SetCookie(w, cancelCookie())
+				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+				return
+			}
+
+			// refresh cookie
+			sessionCookie.Expires = time.Now().Add(time.Hour * 24)
+			http.SetCookie(w, sessionCookie)
+
+			c := context.WithValue(r.Context(), ContextUserKey, user)
+			h.ServeHTTP(w, r.WithContext(c))
 		})
 	}
 }

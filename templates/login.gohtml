@@ -3,6 +3,10 @@
 <h1>Login</h1>
 
 <form action="/login" method="post" hx-post="/login" id="login" hx-select="#login">
+    {{with .MainError}}
+        <div class="alert alert-danger" role="alert">{{.}}</div>
+    {{end}}
+
     <div class="mb-3">
         <label for="exampleInputEmail1" class="form-label">Email address</label>
         <input type="email" class="form-control {{if .Fields.email.Error}}is-invalid{{end}}" id="exampleInputEmail1" name="email" aria-describedby="emailHelp" value="{{.Fields.email.Value}}">

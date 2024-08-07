@@ -18,7 +18,7 @@ func addRoutes(
 	requireAuth := makeRequireAuthMiddleware(userStore, config.jwtSecret)
 	requireLogin := makeRequireLogin(userStore, sessionStore)
 
-	mux.Handle("/", requireLogin(handleHome()))
+	mux.Handle("/", handleHome())
 	mux.Handle("GET /dashboard", requireLogin(handleDashboard(logger, templ)))
 	mux.Handle("/login", handleLogin(templ, userStore, sessionStore))
 	mux.Handle("/logout", handleLogout())

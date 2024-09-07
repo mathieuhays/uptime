@@ -44,8 +44,8 @@ jobs:
 #      - name: Static check
 #        run: staticcheck ./...
 
-  deployment:
-    name: Deployment
+  build:
+    name: Build
 #    needs: tests
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
@@ -80,6 +80,13 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-#      - name: Deploy to Server
-#        run: |
-#          curl --request GET '${{ secrets.CLOUD_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.CLOUD_TOKEN }}'
+  deploy:
+    name: Deployment
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Deploy to Server
+        run: |
+          curl --request GET '${{ secrets.CLOUD_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.CLOUD_TOKEN }}'

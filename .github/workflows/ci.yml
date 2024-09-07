@@ -47,7 +47,7 @@ jobs:
   deployment:
     name: Deployment
 #    needs: tests
-    runs-on: linux
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
     permissions:

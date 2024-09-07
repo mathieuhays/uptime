@@ -11,7 +11,7 @@ COPY ./ ./
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o /app ./cmd/server
 
-FROM scratch
+FROM --platform=linux/arm64/v8 scratch
 
 COPY --from=build /app /app
 

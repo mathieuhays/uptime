@@ -54,7 +54,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
+		log.Printf("env file error: %s", err)
 	}
 
 	if err := run(os.Getenv, os.Stdout, os.Stderr); err != nil {

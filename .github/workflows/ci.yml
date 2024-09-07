@@ -1,9 +1,16 @@
 name: ci
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: "mathieuhays/uptime"
 
 jobs:
   tests:
@@ -17,7 +24,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -28,19 +35,6 @@ jobs:
       - name: Security check
         run: gosec ./...
 
-  style:
-    name: Style
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
@@ -49,3 +43,37 @@ jobs:
 
       - name: Static check
         run: staticcheck ./...
+
+  deployment:
+    name: Deployment
+    needs: tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN  }}
+
+      - name: Build image and push to registry
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/arm
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+#      - name: Deploy to Server
+#        run: |
+#          curl --request GET '${{ secrets.CLOUD_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.CLOUD_TOKEN }}'

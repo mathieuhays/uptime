@@ -9,7 +9,7 @@ RUN go mod download
 # copy source code
 COPY ./ ./
 
-RUN CGO_ENABLED=0 go build -o /app ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o /app ./cmd/server
 
 FROM scratch
 

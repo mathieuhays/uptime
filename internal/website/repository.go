@@ -8,7 +8,6 @@ import (
 )
 
 var errNoRows = errors.New("no rows found")
-var errDecodeRow = errors.New("could not decode row properly")
 
 type sqliteWebsite struct {
 	uuid      string

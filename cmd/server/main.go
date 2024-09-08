@@ -7,7 +7,6 @@ import (
 	"github.com/mathieuhays/uptime"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -38,7 +37,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 	serverHandler := uptime.NewServer(templ)
 
 	server := &http.Server{
-		Addr:              net.JoinHostPort(hostname, port),
+		Addr:              ":80",
 		Handler:           serverHandler,
 		ReadHeaderTimeout: time.Second * 5,
 		WriteTimeout:      time.Second * 5,
@@ -57,8 +56,12 @@ func main() {
 		log.Printf("env file error: %s", err)
 	}
 
+	log.Printf("env: %s", os.Environ())
+
 	if err := run(os.Getenv, os.Stdout, os.Stderr); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+		log.Printf("listen err: %s\n", err)
 		os.Exit(1)
 	}
+
+	log.Println("goodbye")
 }

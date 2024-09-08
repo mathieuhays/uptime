@@ -18,4 +18,9 @@ COPY --from=build /app /app
 # Copy the certs from the builder stage
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
+ENV PORT=80
+ENV HOSTNAME=localhost
+
+EXPOSE 80
+
 ENTRYPOINT ["/app"]

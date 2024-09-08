@@ -1,32 +1,48 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/mathieuhays/uptime"
+	"github.com/mathieuhays/uptime/internal/website"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	errMissingHostname = errors.New("missing HOSTNAME env variable")
-	errMissingPort     = errors.New("missing PORT env variable")
+	errMissingPort         = errors.New("missing PORT env variable")
+	errMissingDatabasePath = errors.New("missing DATABASE_PATH env variable")
 )
 
 func run(getenv func(string) string, stdout, stderr io.Writer) error {
-	hostname := getenv("HOSTNAME")
 	port := getenv("PORT")
-
-	if hostname == "" {
-		return errMissingHostname
-	}
+	databasePath := getenv("DATABASE_PATH")
 
 	if port == "" {
 		return errMissingPort
+	}
+
+	if databasePath == "" {
+		return errMissingDatabasePath
+	}
+
+	db, err := sql.Open("sqlite3", databasePath)
+	if err != nil {
+		log.Fatalf("database error: %s", err)
+	}
+
+	websiteRepository := website.NewSQLiteRepository(db)
+
+	if err = websiteRepository.Migrate(); err != nil {
+		log.Fatalf("website repo migration error: %s", err)
 	}
 
 	templ, err := uptime.TemplateEngine()
@@ -34,10 +50,10 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		log.Fatalf("error loading templates: %s", err)
 	}
 
-	serverHandler := uptime.NewServer(templ)
+	serverHandler := uptime.NewServer(templ, websiteRepository)
 
 	server := &http.Server{
-		Addr:              ":80",
+		Addr:              net.JoinHostPort("", port),
 		Handler:           serverHandler,
 		ReadHeaderTimeout: time.Second * 5,
 		WriteTimeout:      time.Second * 5,
@@ -55,8 +71,6 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("env file error: %s", err)
 	}
-
-	log.Printf("env: %s", os.Environ())
 
 	if err := run(os.Getenv, os.Stdout, os.Stderr); err != nil {
 		log.Printf("listen err: %s\n", err)

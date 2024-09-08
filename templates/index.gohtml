@@ -2,6 +2,44 @@
 
 <div>
     <h1>Uptime</h1>
+
+    <h2>Websites</h2>
+
+    {{if .Websites}}
+        <ul>
+            {{range .Websites}}
+                <li>{{.Name}}: {{.URL}}</li>
+            {{end}}
+        </ul>
+    {{else}}
+        <div>No websites to show yet</div>
+    {{end}}
+
+    <h2>Add new website</h2>
+
+    <form action="" method="post">
+        {{if .Problems.form}}
+            <div style="color:red">{{.Problems.form}}</div>
+        {{end}}
+
+        <p>
+            <label for="name">Name</label><br>
+            <input type="text" name="name" id="name">
+            {{if .Problems.name}}
+                <br><span style="color: red">{{.Problems.name}}</span>
+            {{end}}
+        </p>
+        <p>
+            <label for="url">URL</label><br>
+            <input type="text" name="url" id="url">
+            {{if .Problems.url}}
+                <br><span style="color: red">{{.Problems.url}}</span>
+            {{end}}
+        </p>
+        <p>
+            <button>Add</button>
+        </p>
+    </form>
 </div>
 
 {{template "footer"}}

@@ -7,24 +7,6 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	t.Run("missing hostname check", func(t *testing.T) {
-		getEnv := func(name string) string {
-			if name == "HOSTNAME" {
-				return ""
-			}
-
-			return "lskjdf"
-		}
-
-		stdout := bytes.NewBuffer([]byte{})
-		stderr := bytes.NewBuffer([]byte{})
-		err := run(getEnv, stdout, stderr)
-
-		if !errors.Is(err, errMissingHostname) {
-			t.Errorf("Hostname error expected. Got different error: %s", err)
-		}
-	})
-
 	t.Run("missing port check", func(t *testing.T) {
 		getEnv := func(name string) string {
 			if name == "PORT" {

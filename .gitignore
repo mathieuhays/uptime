@@ -29,3 +29,6 @@ go.work.sum
 
 # Project binary
 uptime
+
+# DB
+*.db

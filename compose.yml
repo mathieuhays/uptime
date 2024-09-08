@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      DATABASE_PATH: /data/uptime.db
+    volumes:
+      - type: bind
+        source: ./uptime.db
+        target: /data/uptime.db

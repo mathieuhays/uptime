@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/tursodatabase/go-libsql"
 )
 
 var (
@@ -34,7 +34,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		return errMissingDatabasePath
 	}
 
-	db, err := sql.Open("sqlite3", databasePath)
+	db, err := sql.Open("libsql", "file:"+databasePath)
 	if err != nil {
 		log.Fatalf("database error: %s", err)
 	}

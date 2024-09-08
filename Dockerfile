@@ -1,4 +1,4 @@
-FROM golang AS build
+FROM golang:1.23 AS build
 
 WORKDIR /src
 
@@ -9,17 +9,18 @@ RUN go mod download
 # copy source code
 COPY ./ ./
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o /app ./cmd/server
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=arm64
 
-FROM scratch
+RUN go build -v -o /app ./cmd/server
+
+FROM ubuntu
 
 COPY --from=build /app /app
 
-# Copy the certs from the builder stage
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 ENV PORT=80
-ENV HOSTNAME=localhost
+ENV DATABASE_PATH=/data/uptime.db
 
 EXPOSE 80
 

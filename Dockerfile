@@ -18,6 +18,7 @@ RUN go build -v -o /app ./cmd/server
 FROM ubuntu
 
 COPY --from=build /app /app
+COPY --from=build /src/static /static
 
 ENV PORT=80
 ENV DATABASE_PATH=/data/uptime.db

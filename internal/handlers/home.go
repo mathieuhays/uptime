@@ -35,6 +35,14 @@ func (r websiteRequest) Valid(ctx context.Context) (problems map[string]string) 
 
 func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/" {
+			writer.WriteHeader(http.StatusNotFound)
+			if err := templ.ExecuteTemplate(writer, "404.gohtml", struct{}{}); err != nil {
+				log.Printf("error rendering 404: %s\n", err)
+			}
+			return
+		}
+
 		problems := map[string]string{}
 
 		if request.Method == http.MethodPost {

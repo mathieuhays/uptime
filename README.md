@@ -8,7 +8,7 @@ Simple tool to monitor multiple URLs
 - [ ] normalize URLs
 - [ ] improve URL validation
 - [ ] add delete action
-- [ ] improve styling (use bootstrap)
+- [x] improve styling (use bootstrap)
 - [ ] setup basic crawler
 - [x] Home, add redirect when item successfully created
 - [ ] add HTMX

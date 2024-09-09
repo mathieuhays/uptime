@@ -1,44 +1,57 @@
 {{template "header"}}
 
 <div class="container">
-    <h1>Uptime</h1>
+    <h1 class="mt-4">Uptime</h1>
 
-    <h2>Websites</h2>
+    <h2 class="mt-5">Websites</h2>
 
-    {{if .Websites}}
-        <ul>
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">URL</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{if .Websites}}
             {{range .Websites}}
-                <li>{{.Name}}: {{.URL}}</li>
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.URL}}</td>
+                    <td></td>
+                </tr>
             {{end}}
-        </ul>
-    {{else}}
-        <div>No websites to show yet</div>
-    {{end}}
+        {{else}}
+            <tr><td colspan="3"><em>No websites to show yet</em></tr>
+        {{end}}
+        </tbody>
+    </table>
 
-    <h2>Add new website</h2>
+    <h2 class="mt-4 h4">Add new website</h2>
 
     <form action="" method="post" autocomplete="off">
+        <div class="input-group {{if len .Problems}}has-validation{{end}}">
+            <input type="text" class="form-control {{if .Problems.name}}is-invalid{{end}}" name="name" id="name" placeholder="Website Name" value="{{with .Values.Name}}{{.}}{{end}}">
+            <label for="name" class="visually-hidden">Name</label>
+
+            <input type="text" class="form-control {{if .Problems.url}}is-invalid{{end}}" name="url" id="url" placeholder="URL" value="{{with .Values.URL}}{{.}}{{end}}">
+            <label for="url" class="visually-hidden">URL</label>
+
+            <button class="btn btn-primary">Add</button>
+        </div>
+
         {{if .Problems.form}}
-            <div style="color:red">{{.Problems.form}}</div>
+            <div class="alert alert-danger p-2 mt-2">{{.Problems.form}}</div>
         {{end}}
 
-        <p>
-            <label for="name">Name</label><br>
-            <input type="text" name="name" id="name" value="{{with .Values.Name}}{{.}}{{end}}">
-            {{if .Problems.name}}
-                <br><span style="color: red">{{.Problems.name}}</span>
-            {{end}}
-        </p>
-        <p>
-            <label for="url">URL</label><br>
-            <input type="text" name="url" id="url" value="{{with .Values.URL}}{{.}}{{end}}">
-            {{if .Problems.url}}
-                <br><span style="color: red">{{.Problems.url}}</span>
-            {{end}}
-        </p>
-        <p>
-            <button>Add</button>
-        </p>
+        {{if .Problems.name}}
+            <div class="alert alert-danger p-2 mt-2">Name: {{.Problems.name}}</div>
+        {{end}}
+
+        {{if .Problems.url}}
+            <div class="alert alert-danger p-2 mt-2">URL: {{.Problems.url}}</div>
+        {{end}}
     </form>
 </div>
 

@@ -47,20 +47,6 @@ func NewSQLiteRepository(db *sql.DB) *SQLiteRepository {
 	return &SQLiteRepository{db: db}
 }
 
-func (r *SQLiteRepository) Migrate() error {
-	query := `
-	CREATE TABLE IF NOT EXISTS websites (
-		uuid TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		url TEXT NOT NULL UNIQUE,
-		created_at TEXT
-	);
-	`
-
-	_, err := r.db.Exec(query)
-	return err
-}
-
 func (r *SQLiteRepository) Create(website Website) (*Website, error) {
 	_, err := r.db.Exec(
 		"INSERT INTO websites(uuid, name, url, created_at) VALUES(?, ?, ?, ?)",

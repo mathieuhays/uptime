@@ -13,7 +13,6 @@ type Website struct {
 }
 
 type Repository interface {
-	Migrate() error
 	Create(website Website) (*Website, error)
 	Get(id uuid.UUID) (*Website, error)
 	GetByURL(url string) (*Website, error)

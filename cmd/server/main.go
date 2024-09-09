@@ -39,11 +39,11 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		log.Fatalf("database error: %s", err)
 	}
 
-	websiteRepository := website.NewSQLiteRepository(db)
-
-	if err = websiteRepository.Migrate(); err != nil {
-		log.Fatalf("website repo migration error: %s", err)
+	if err = uptime.Migrate(db, "turso"); err != nil {
+		log.Fatalf("migration error: %s", err)
 	}
+
+	websiteRepository := website.NewSQLiteRepository(db)
 
 	templ, err := uptime.TemplateEngine()
 	if err != nil {

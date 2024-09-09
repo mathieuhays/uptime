@@ -19,7 +19,9 @@
                 <tr>
                     <td>{{.Name}}</td>
                     <td>{{.URL}}</td>
-                    <td></td>
+                    <td>
+                        <a href="/website/{{.ID}}/delete" class="link-danger" onclick="return confirm('Are you sure?')">delete</a>
+                    </td>
                 </tr>
             {{end}}
         {{else}}

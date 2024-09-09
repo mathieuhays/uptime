@@ -89,6 +89,11 @@ func (r *SQLiteRepository) GetByURL(url string) (*Website, error) {
 	))
 }
 
+func (r *SQLiteRepository) Delete(id uuid.UUID) error {
+	_, err := r.db.Exec("DELETE FROM websites WHERE uuid = ?;", id.String())
+	return err
+}
+
 func (r *SQLiteRepository) All() ([]Website, error) {
 	rows, err := r.db.Query("SELECT uuid, name, url, created_at FROM websites;")
 	if err != nil {

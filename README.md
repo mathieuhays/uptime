@@ -7,7 +7,7 @@ Simple tool to monitor multiple URLs
 - [x] improve create error handling (stop exposing sql query on front-end)
 - [ ] normalize URLs
 - [ ] improve URL validation
-- [ ] add delete action
+- [x] add delete action
 - [x] improve styling (use bootstrap)
 - [ ] setup basic crawler
 - [x] Home, add redirect when item successfully created

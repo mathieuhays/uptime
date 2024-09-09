@@ -16,5 +16,6 @@ type Repository interface {
 	Create(website Website) (*Website, error)
 	Get(id uuid.UUID) (*Website, error)
 	GetByURL(url string) (*Website, error)
+	Delete(id uuid.UUID) error
 	All() ([]Website, error)
 }

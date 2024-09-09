@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/website"
@@ -33,7 +34,16 @@ func (r websiteRequest) Valid(ctx context.Context) (problems map[string]string) 
 	return problems
 }
 
+func makeUrlExists(webRepo website.Repository) func(url string) bool {
+	return func(url string) bool {
+		_, err := webRepo.GetByURL(url)
+		return !errors.Is(err, website.ErrNoRows)
+	}
+}
+
 func Home(templ *template.Template, webRepo website.Repository) http.Handler {
+	urlExists := makeUrlExists(webRepo)
+
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/" {
 			writer.WriteHeader(http.StatusNotFound)
@@ -44,13 +54,18 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 		}
 
 		problems := map[string]string{}
+		var newWebsiteRequest websiteRequest
 
 		if request.Method == http.MethodPost {
-			newWebsiteRequest := websiteRequest{
+			newWebsiteRequest = websiteRequest{
 				Name: request.FormValue("name"),
 				URL:  request.FormValue("url"),
 			}
 			problems = newWebsiteRequest.Valid(request.Context())
+
+			if len(problems) == 0 && urlExists(newWebsiteRequest.URL) {
+				problems["url"] = "URL already exists"
+			}
 
 			if len(problems) == 0 {
 				newWebsite := website.Website{
@@ -61,7 +76,11 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 				}
 
 				if _, err := webRepo.Create(newWebsite); err != nil {
-					problems["form"] = fmt.Sprintf("could not create new website. error: %s", err)
+					problems["form"] = fmt.Sprintln("Something went wrong while creating website. Please try again.")
+					log.Printf("website creation error: %s", err)
+				} else {
+					http.Redirect(writer, request, request.URL.Path, http.StatusFound)
+					return
 				}
 			}
 		}
@@ -69,9 +88,11 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 		data := struct {
 			Websites []website.Website
 			Problems map[string]string
+			Values   websiteRequest
 		}{
 			Websites: []website.Website{},
 			Problems: problems,
+			Values:   newWebsiteRequest,
 		}
 
 		webItems, err := webRepo.All()

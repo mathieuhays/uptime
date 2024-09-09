@@ -4,13 +4,13 @@ Simple tool to monitor multiple URLs
 
 ## TODO
 
-- [ ] improve create error handling (stop exposing sql query on front-end)
+- [x] improve create error handling (stop exposing sql query on front-end)
 - [ ] normalize URLs
 - [ ] improve URL validation
 - [ ] add delete action
 - [ ] improve styling (use bootstrap)
 - [ ] setup basic crawler
-- [ ] Home, add redirect when item successfully created
+- [x] Home, add redirect when item successfully created
 - [ ] add HTMX
 
 ## Crawler related stuff

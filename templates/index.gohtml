@@ -17,21 +17,21 @@
 
     <h2>Add new website</h2>
 
-    <form action="" method="post">
+    <form action="" method="post" autocomplete="off">
         {{if .Problems.form}}
             <div style="color:red">{{.Problems.form}}</div>
         {{end}}
 
         <p>
             <label for="name">Name</label><br>
-            <input type="text" name="name" id="name">
+            <input type="text" name="name" id="name" value="{{with .Values.Name}}{{.}}{{end}}">
             {{if .Problems.name}}
                 <br><span style="color: red">{{.Problems.name}}</span>
             {{end}}
         </p>
         <p>
             <label for="url">URL</label><br>
-            <input type="text" name="url" id="url">
+            <input type="text" name="url" id="url" value="{{with .Values.URL}}{{.}}{{end}}">
             {{if .Problems.url}}
                 <br><span style="color: red">{{.Problems.url}}</span>
             {{end}}

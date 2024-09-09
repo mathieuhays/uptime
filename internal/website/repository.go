@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var errNoRows = errors.New("no rows found")
+var ErrNoRows = errors.New("no rows found")
 
 type sqliteWebsite struct {
 	uuid      string
@@ -77,18 +77,30 @@ func (r *SQLiteRepository) Create(website Website) (*Website, error) {
 	return &website, nil
 }
 
-func (r *SQLiteRepository) Get(id uuid.UUID) (*Website, error) {
-	row := r.db.QueryRow("SELECT uuid, name, url, created_at FROM websites WHERE uuid = ?", id.String())
-
+func rowToWebsite(row *sql.Row) (*Website, error) {
 	var website sqliteWebsite
 	if err := row.Scan(&website.uuid, &website.name, &website.url, &website.createdAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errNoRows
+			return nil, ErrNoRows
 		}
 		return nil, err
 	}
 
 	return website.export()
+}
+
+func (r *SQLiteRepository) Get(id uuid.UUID) (*Website, error) {
+	return rowToWebsite(r.db.QueryRow(
+		"SELECT uuid, name, url, created_at FROM websites WHERE uuid = ? LIMIT 1;",
+		id.String(),
+	))
+}
+
+func (r *SQLiteRepository) GetByURL(url string) (*Website, error) {
+	return rowToWebsite(r.db.QueryRow(
+		"SELECT uuid, name, url, created_at FROM websites WHERE url = ? LIMIT 1;",
+		url,
+	))
 }
 
 func (r *SQLiteRepository) All() ([]Website, error) {

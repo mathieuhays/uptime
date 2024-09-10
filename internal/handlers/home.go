@@ -63,18 +63,18 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 			}
 			problems = newWebsiteRequest.Valid(request.Context())
 
-			if len(problems) == 0 && urlExists(newWebsiteRequest.URL) {
+			newWebsite := website.Website{
+				ID:        uuid.New(),
+				Name:      newWebsiteRequest.Name,
+				URL:       website.NormalizeURL(newWebsiteRequest.URL),
+				CreatedAt: time.Now(),
+			}
+
+			if len(problems) == 0 && urlExists(newWebsite.URL) {
 				problems["url"] = "URL already exists"
 			}
 
 			if len(problems) == 0 {
-				newWebsite := website.Website{
-					ID:        uuid.New(),
-					Name:      newWebsiteRequest.Name,
-					URL:       newWebsiteRequest.URL,
-					CreatedAt: time.Now(),
-				}
-
 				if _, err := webRepo.Create(newWebsite); err != nil {
 					problems["form"] = fmt.Sprintln("Something went wrong while creating website. Please try again.")
 					log.Printf("website creation error: %s", err)

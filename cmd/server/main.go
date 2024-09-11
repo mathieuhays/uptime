@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/mathieuhays/uptime"
+	"github.com/mathieuhays/uptime/internal/healthcheck"
 	"github.com/mathieuhays/uptime/internal/website"
 	"io"
 	"log"
@@ -43,7 +45,15 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		log.Fatalf("migration error: %s", err)
 	}
 
-	websiteRepository := website.NewSQLiteRepository(db)
+	websiteRepository, err := website.NewSQLiteRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	healthCheckRepo, err := healthcheck.NewSQLiteRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	templ, err := uptime.TemplateEngine()
 	if err != nil {
@@ -58,6 +68,18 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		ReadHeaderTimeout: time.Second * 5,
 		WriteTimeout:      time.Second * 5,
 	}
+
+	crawler := uptime.NewCrawler(
+		healthCheckRepo,
+		websiteRepository,
+		time.Minute*4,
+		5,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go crawler.Start(ctx)
 
 	_, _ = fmt.Fprintf(stdout, "Starting server on %s\n", server.Addr)
 	if err = server.ListenAndServe(); err != nil {

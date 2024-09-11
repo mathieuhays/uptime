@@ -10,6 +10,7 @@
         <tr>
             <th scope="col">Name</th>
             <th scope="col">URL</th>
+            <th scope="col">Last fetched at</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -19,6 +20,7 @@
                 <tr>
                     <td>{{.Name}}</td>
                     <td>{{.URL}}</td>
+                    <td>{{with .LastFetchedAt}}{{.}}{{end}}</td>
                     <td>
                         <a href="/website/{{.ID}}/delete" class="link-danger" onclick="return confirm('Are you sure?')">delete</a>
                     </td>

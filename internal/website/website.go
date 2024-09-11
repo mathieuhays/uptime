@@ -6,10 +6,11 @@ import (
 )
 
 type Website struct {
-	ID        uuid.UUID
-	Name      string
-	URL       string
-	CreatedAt time.Time
+	ID            uuid.UUID
+	Name          string
+	URL           string
+	LastFetchedAt *time.Time
+	CreatedAt     time.Time
 }
 
 type Repository interface {
@@ -18,4 +19,6 @@ type Repository interface {
 	GetByURL(url string) (*Website, error)
 	Delete(id uuid.UUID) error
 	All() ([]Website, error)
+	SetAsFetched(id uuid.UUID, date time.Time) error
+	GetWebsitesByLastFetched(threshold time.Time, limit int) ([]Website, error)
 }

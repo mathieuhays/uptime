@@ -19,6 +19,7 @@ FROM ubuntu
 
 COPY --from=build /app /app
 COPY --from=build /src/static /static
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ENV PORT=80
 ENV DATABASE_PATH=/data/uptime.db

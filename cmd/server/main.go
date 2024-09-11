@@ -72,7 +72,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 	crawler := uptime.NewCrawler(
 		healthCheckRepo,
 		websiteRepository,
-		time.Minute*4,
+		time.Minute,
 		5,
 	)
 

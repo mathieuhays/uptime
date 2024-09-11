@@ -52,7 +52,7 @@ func (c *Crawler) crawl() {
 	log.Printf("Start crawl")
 	var websites []website.Website
 
-	items, err := c.websiteRepo.GetWebsitesByLastFetched(time.Now().Add(time.Minute*-5), 2)
+	items, err := c.websiteRepo.GetWebsitesByLastFetched(time.Now().Add(time.Minute*-5), 30)
 	if err == nil {
 		items = slices.Concat(websites, items)
 	}

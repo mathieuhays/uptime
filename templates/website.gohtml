@@ -1,0 +1,44 @@
+{{template "header"}}
+
+<div class="container">
+    <h1 class="mt-4">
+        Uptime, {{.Website.Name}}
+        <a href="/" class="btn btn-light btn-sm">dashboard</a>
+    </h1>
+
+    <table class="table table-striped table-bordered">
+        <tbody>
+        <tr>
+            <th scope="row">URL</th>
+            <td>{{.Website.URL}}</td>
+        </tr>
+        <tr>
+            <th scope="row">Last fetched</th>
+            <td>{{with .Website.LastFetchedAt}}{{.}}{{end}}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Health checks</h2>
+
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">Status code</th>
+            <th scope="col">Response time</th>
+            <th scope="col">Created At</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .HealthChecks}}
+            <tr>
+                <td>{{.StatusCode}}</td>
+                <td>{{.ResponseTime}}</td>
+                <td>{{.CreatedAt}}</td>
+            </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+
+{{template "footer"}}

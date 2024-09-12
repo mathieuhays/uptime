@@ -22,6 +22,7 @@
                     <td>{{.URL}}</td>
                     <td>{{with .LastFetchedAt}}{{.}}{{end}}</td>
                     <td>
+                        <a href="/website/{{.ID}}" class="link-info">View</a>
                         <a href="/website/{{.ID}}/delete" class="link-danger" onclick="return confirm('Are you sure?')">delete</a>
                     </td>
                 </tr>

@@ -60,7 +60,7 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		log.Fatalf("error loading templates: %s", err)
 	}
 
-	serverHandler := uptime.NewServer(templ, websiteRepository)
+	serverHandler := uptime.NewServer(templ, websiteRepository, healthCheckRepo)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("", port),

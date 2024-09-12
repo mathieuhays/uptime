@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/website"
 	"net/http"
@@ -17,6 +18,15 @@ func DeleteWebsite(webRepo website.Repository) http.Handler {
 		id, err := uuid.Parse(idString)
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		_, err = webRepo.Get(id)
+		if errors.Is(err, website.ErrNoRows) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		} else if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 

@@ -85,8 +85,6 @@ func (c *Crawler) crawlURL(w website.Website) {
 
 	log.Printf("Executing crawl for URL: %s", w.URL)
 
-	start := time.Now()
-
 	req, err := http.NewRequest(http.MethodGet, w.URL, nil)
 	if err != nil {
 		log.Printf("request creation error for %s: %s", w.URL, err)
@@ -94,6 +92,8 @@ func (c *Crawler) crawlURL(w website.Website) {
 	}
 
 	client := http.Client{}
+
+	start := time.Now()
 	res, err := client.Do(req)
 	end := time.Now()
 

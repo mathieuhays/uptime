@@ -6,39 +6,80 @@
         <a href="/" class="btn btn-light btn-sm">dashboard</a>
     </h1>
 
-    <table class="table table-striped table-bordered">
-        <tbody>
-        <tr>
-            <th scope="row">URL</th>
-            <td>{{.Website.URL}}</td>
-        </tr>
-        <tr>
-            <th scope="row">Last fetched</th>
-            <td>{{with .Website.LastFetchedAt}}{{.}}{{end}}</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="row mt-5">
+        <div class="col-12 col-md-3">
+            <p>
+                <strong>URL:</strong><br>
+                <em>{{.Website.URL}}</em>
+            </p>
+            <p>
+                <strong>Last fetched:</strong><br>
+                <em>{{with .Website.LastFetchedAt}}{{.}}{{end}}</em>
+            </p>
+        </div>
+        <div class="col-12 col-md-9">
+            {{if .HealthCheckChartData}}
+                <div class="mb-4">
+                    <canvas id="healthChecksChart"></canvas>
+                </div>
+            {{end}}
 
-    <h2>Health checks</h2>
-
-    <table class="table table-striped table-bordered">
-        <thead>
-        <tr>
-            <th scope="col">Status code</th>
-            <th scope="col">Response time</th>
-            <th scope="col">Created At</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{range .HealthChecks}}
-            <tr>
-                <td>{{.StatusCode}}</td>
-                <td>{{.ResponseTime}}</td>
-                <td>{{.CreatedAt}}</td>
-            </tr>
-        {{end}}
-        </tbody>
-    </table>
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th scope="col">Status code</th>
+                    <th scope="col">Response time</th>
+                    <th scope="col">Created At</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .HealthChecks}}
+                    <tr>
+                        <td>{{.StatusCode}}</td>
+                        <td>{{.ResponseTime}}</td>
+                        <td>{{.CreatedAt}}</td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+    {{if .HealthCheckChartData}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+
+    <script>
+        const ctx = document.getElementById("healthChecksChart");
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    data: JSON.parse({{.HealthCheckChartData}})
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour'
+                        }
+                    },
+                    y: {
+                        title: {
+                            text: 'response time (ms)'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 1000
+                    }
+                }
+            }
+        })
+    </script>
+    {{end}}
 
 {{template "footer"}}

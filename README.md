@@ -14,3 +14,5 @@ Simple tool to monitor multiple URLs
 ## Ideas
 
 - [ ] Setup websockets for instant updates
+- [ ] Have an image attached to each website (automated). either screenshot, social media meta image or favicon. screenshot will probably require nodejs.
+- [ ] Website view: maybe infer page colour theme from target website?

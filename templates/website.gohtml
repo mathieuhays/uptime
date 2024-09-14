@@ -2,8 +2,7 @@
 
 <div class="container">
     <h1 class="mt-4">
-        Uptime, {{.Website.Name}}
-        <a href="/" class="btn btn-light btn-sm">dashboard</a>
+        {{.Website.Name}}
     </h1>
 
     <div class="row mt-5">
@@ -18,68 +17,111 @@
             </p>
         </div>
         <div class="col-12 col-md-9">
-            {{if .HealthCheckChartData}}
-                <div class="mb-4">
-                    <canvas id="healthChecksChart"></canvas>
-                </div>
-            {{end}}
-
-            <table class="table table-striped table-bordered">
-                <thead>
-                <tr>
-                    <th scope="col">Status code</th>
-                    <th scope="col">Response time</th>
-                    <th scope="col">Created At</th>
-                </tr>
-                </thead>
-                <tbody>
-                {{range .HealthChecks}}
-                    <tr>
-                        <td>{{.StatusCode}}</td>
-                        <td>{{.ResponseTime}}</td>
-                        <td>{{.CreatedAt}}</td>
-                    </tr>
-                {{end}}
-                </tbody>
-            </table>
+            <div class="mb-4">
+                <canvas id="healthChecksChart"></canvas>
+            </div>
+            <div class="input-group">
+                <label for="chart-range" class="input-group-text">Date range:</label>
+                <select id="chart-range" class="form-select" disabled name="range" autocomplete="off">
+                    <option value="day">last 24 hours</option>
+                    <option value="week">last 7 days</option>
+                    <option value="month">last 30 days</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
 
-    {{if .HealthCheckChartData}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
-    <script>
-        const ctx = document.getElementById("healthChecksChart");
+<script>
+    const cache = {}
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    data: JSON.parse({{.HealthCheckChartData}})
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'hour'
-                        }
-                    },
-                    y: {
-                        title: {
-                            text: 'response time (ms)'
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 1000
-                    }
-                }
+    function loadData() {
+        const range = selector.value
+
+        if (range in cache) {
+            showRange(range)
+            return
+        }
+
+        selector.setAttribute("disabled", "disabled")
+
+        fetch('/website/{{.Website.ID}}/healthcheck/dataset?range=' + range).then(res => res.json()).then((ds) => {
+            selector.removeAttribute("disabled")
+
+            if ('data' in ds) {
+                cache[range] = ds.data
+                showRange(range)
             }
         })
-    </script>
-    {{end}}
+    }
+
+    function showRange(range) {
+        let unit = 'hour'
+
+        if (range !== 'day') {
+            unit = 'day'
+        }
+
+        chart.data.datasets[0].data = cache[range]
+        chart.options.scales.x.time.unit = unit
+        chart.update();
+    }
+
+    function colorize(ctx) {
+        if ('raw' in ctx && 'code' in ctx.raw) {
+            const v = ctx.raw.code
+            return v < 400 ? '#44DE28' : v >= 500 ? '#D60000' : 'orange'
+        }
+
+        return '#eee'
+    }
+
+    const ctx = document.getElementById("healthChecksChart");
+    const selector = document.getElementById("chart-range");
+
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)'
+    Chart.defaults.color = 'white'
+
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            datasets: [{
+                label: 'response times',
+                data: []
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    }
+                },
+                y: {
+                    title: {
+                        text: 'response time (ms)'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 1000
+                }
+            },
+            elements: {
+                bar: {
+                    backgroundColor: colorize,
+                    borderColor: colorize,
+                }
+            }
+        }
+    })
+
+    loadData()
+
+    selector.addEventListener("change", loadData)
+</script>
 
 {{template "footer"}}

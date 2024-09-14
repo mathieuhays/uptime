@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/google/uuid"
 	"github.com/mathieuhays/uptime/internal/healthcheck"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func Website(templ *template.Template, webRepo website.Repository, hcRepo healthcheck.Repository) http.Handler {
+func Website(templ *template.Template, webRepo website.Repository) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		id, err := uuid.Parse(request.PathValue("id"))
 		if err != nil {
@@ -30,46 +29,67 @@ func Website(templ *template.Template, webRepo website.Repository, hcRepo health
 			return
 		}
 
-		healthChecks, err := hcRepo.GetByWebsiteID(w.ID, 50)
-		if err != nil {
-			ErrorPageFromStatus(templ, writer, http.StatusInternalServerError)
-			return
-		}
-
-		var healthCheckChartData string
-		healthCheckChartDataBytes, err := json.Marshal(healthChecksToChartData(healthChecks))
-		if err == nil {
-			healthCheckChartData = string(healthCheckChartDataBytes)
-		}
-
 		if err = templ.ExecuteTemplate(writer, "website.gohtml", struct {
-			Website              website.Website
-			HealthChecks         []healthcheck.HealthCheck
-			HealthCheckChartData string
+			Website website.Website
 		}{
-			Website:              *w,
-			HealthChecks:         healthChecks,
-			HealthCheckChartData: healthCheckChartData,
+			Website: *w,
 		}); err != nil {
 			log.Printf("website view. error rendering template: %s", err)
 		}
 	})
 }
 
-type point struct {
-	X string `json:"x"`
-	Y int    `json:"y"`
-}
-
-func healthChecksToChartData(items []healthcheck.HealthCheck) []point {
-	points := []point{}
-
-	for _, item := range items {
-		points = append(points, point{
-			X: item.CreatedAt.Format(time.DateTime),
-			Y: int(item.ResponseTime.Milliseconds()),
-		})
+func HealthcheckDataset(hcRepo healthcheck.Repository) http.Handler {
+	type point struct {
+		X    string `json:"x"`
+		Y    int    `json:"y"`
+		Code int    `json:"code"`
 	}
 
-	return points
+	type response struct {
+		Data []point `json:"data"`
+	}
+
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		id, err := uuid.Parse(request.PathValue("id"))
+		if err != nil {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		var days int
+		requestedRange := request.URL.Query().Get("range")
+		switch requestedRange {
+		case "month":
+			days = 30
+		case "week":
+			days = 7
+		default:
+			days = 1
+		}
+
+		healthChecks, err := hcRepo.GetByWebsiteID(id, healthcheck.DateRange{
+			Start: time.Now().Add(time.Hour * 24 * time.Duration(-days)),
+			End:   time.Now(),
+		})
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		var points []point
+
+		for _, item := range healthChecks {
+			points = append(points, point{
+				X:    item.CreatedAt.Format(time.DateTime),
+				Y:    int(item.ResponseTime.Milliseconds()),
+				Code: item.StatusCode,
+			})
+		}
+
+		if err = encode(writer, request, http.StatusOK, response{Data: points}); err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
 }

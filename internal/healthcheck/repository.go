@@ -83,11 +83,12 @@ func (r *SQLiteRepository) Get(id uuid.UUID) (*HealthCheck, error) {
 	))
 }
 
-func (r *SQLiteRepository) GetByWebsiteID(websiteID uuid.UUID, limit int) ([]HealthCheck, error) {
+func (r *SQLiteRepository) GetByWebsiteID(websiteID uuid.UUID, dateRange DateRange) ([]HealthCheck, error) {
 	rows, err := r.db.Query(
-		"SELECT id, website_id, status_code, response_time_ms, created_at FROM healthchecks WHERE website_id = ? ORDER BY created_at DESC LIMIT ?",
+		"SELECT id, website_id, status_code, response_time_ms, created_at FROM healthchecks WHERE website_id = ? AND created_at BETWEEN ? AND ? ORDER BY created_at DESC",
 		websiteID.String(),
-		limit,
+		dateRange.Start.Unix(),
+		dateRange.End.Unix(),
 	)
 	if err != nil {
 		return nil, err

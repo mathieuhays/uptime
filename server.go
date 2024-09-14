@@ -14,8 +14,9 @@ func NewServer(templ *template.Template, websiteRepository website.Repository, h
 	mux.Handle("/{$}", handlers.Home(templ, websiteRepository))
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
-	mux.Handle("GET /website/{id}", handlers.Website(templ, websiteRepository, healthCheckRepo))
+	mux.Handle("GET /website/{id}", handlers.Website(templ, websiteRepository))
 	mux.Handle("GET /website/{id}/delete", handlers.DeleteWebsite(websiteRepository))
+	mux.Handle("GET /website/{id}/healthcheck/dataset", handlers.HealthcheckDataset(healthCheckRepo))
 
 	return mux
 }

@@ -8,5 +8,5 @@ services:
       DATABASE_PATH: /data/uptime.db
     volumes:
       - type: bind
-        source: ./uptime.db
+        source: ./tmp/uptime.db
         target: /data/uptime.db

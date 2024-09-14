@@ -1,61 +1,67 @@
-{{template "header"}}
+{{block "index" .}}
+    {{template "header"}}
 
-<div class="container">
-    <h2 class="mt-5">Websites</h2>
+    <div class="container">
+        <h2 class="mt-5">Websites</h2>
 
-    <table class="table table-striped table-bordered">
-        <thead>
-        <tr>
-            <th scope="col">Name</th>
-            <th scope="col">URL</th>
-            <th scope="col">Last fetched at</th>
-            <th scope="col">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{if .Websites}}
-            {{range .Websites}}
-                <tr>
-                    <td>{{.Name}}</td>
-                    <td>{{.URL}}</td>
-                    <td>{{with .LastFetchedAt}}{{.}}{{end}}</td>
-                    <td>
-                        <a href="/website/{{.ID}}" class="link-info">View</a>
-                        <a href="/website/{{.ID}}/delete" class="link-danger" onclick="return confirm('Are you sure?')">delete</a>
-                    </td>
-                </tr>
+        <div id="websites" class="row g-3">
+            {{if .Websites}}
+                {{range .Websites}}
+                    {{template "website-item" .}}
+                {{end}}
             {{end}}
-        {{else}}
-            <tr><td colspan="3"><em>No websites to show yet</em></tr>
-        {{end}}
-        </tbody>
-    </table>
+        </div>
 
-    <h2 class="mt-4 h4">Add new website</h2>
+        <h2 class="mt-5 h4">Add new website</h2>
 
-    <form action="" method="post" autocomplete="off">
-        <div class="input-group {{if len .Problems}}has-validation{{end}}">
-            <input type="text" class="form-control {{if .Problems.name}}is-invalid{{end}}" name="name" id="name" placeholder="Website Name" value="{{with .Values.Name}}{{.}}{{end}}">
+        {{template "form" .FormData}}
+    </div>
+
+    {{template "footer"}}
+{{end}}
+
+{{block "form" .}}
+    <form action="" method="post" autocomplete="off" hx-post="/" hx-swap="outerHTML">
+        <div class="input-group {{if len .Errors}}has-validation{{end}}">
+            <input type="text" class="form-control {{if .Errors.name}}is-invalid{{end}}" name="name" id="name" placeholder="Website Name" value="{{with .Values.Name}}{{.}}{{end}}">
             <label for="name" class="visually-hidden">Name</label>
 
-            <input type="text" class="form-control {{if .Problems.url}}is-invalid{{end}}" name="url" id="url" placeholder="URL" value="{{with .Values.URL}}{{.}}{{end}}">
+            <input type="text" class="form-control {{if .Errors.url}}is-invalid{{end}}" name="url" id="url" placeholder="URL" value="{{with .Values.URL}}{{.}}{{end}}">
             <label for="url" class="visually-hidden">URL</label>
 
             <button class="btn btn-primary">Add</button>
         </div>
 
-        {{if .Problems.form}}
-            <div class="alert alert-danger p-2 mt-2">{{.Problems.form}}</div>
+        {{if .Errors.form}}
+            <div class="alert alert-danger p-2 mt-2">{{.Errors.form}}</div>
         {{end}}
 
-        {{if .Problems.name}}
-            <div class="alert alert-danger p-2 mt-2">Name: {{.Problems.name}}</div>
+        {{if .Errors.name}}
+            <div class="alert alert-danger p-2 mt-2">Name: {{.Errors.name}}</div>
         {{end}}
 
-        {{if .Problems.url}}
-            <div class="alert alert-danger p-2 mt-2">URL: {{.Problems.url}}</div>
+        {{if .Errors.url}}
+            <div class="alert alert-danger p-2 mt-2">URL: {{.Errors.url}}</div>
         {{end}}
     </form>
-</div>
+{{end}}
 
-{{template "footer"}}
+{{block "website-item" .}}
+    <div class="col-12 col-md-6 col-lg-4 website">
+        <article class="card">
+            <h2><a href="/website/{{.ID}}">{{.Name}}</a></h2>
+            <div><em>{{.URL}}</em></div>
+            <div><em>{{with .LastFetchedAt}}{{.}}{{end}}</em></div>
+            <div class="d-flex flex-row justify-content-between mt-4">
+                <a href="/website/{{.ID}}" class="btn btn-outline-info">View</a>
+                <a href="/website/{{.ID}}/delete" class="btn btn-danger" hx-delete="/website/{{.ID}}/delete" hx-target="closest .website" hx-confirm="Are you want to delete this website and all its records?">delete</a>
+            </div>
+        </article>
+    </div>
+{{end}}
+
+{{block "oob-website-item" .}}
+    <div id="websites" hx-swap-oob="beforeend">
+        {{template "website-item" .}}
+    </div>
+{{end}}

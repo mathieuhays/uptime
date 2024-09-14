@@ -9,6 +9,14 @@ import (
 
 func DeleteWebsite(webRepo website.Repository) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		allowedMethods := map[string]struct{}{
+			http.MethodDelete: struct{}{},
+			http.MethodGet:    struct{}{},
+		}
+		if _, ok := allowedMethods[request.Method]; !ok {
+			writer.WriteHeader(http.StatusMethodNotAllowed)
+		}
+
 		idString := request.PathValue("id")
 		if idString == "" {
 			writer.WriteHeader(http.StatusBadRequest)
@@ -33,6 +41,11 @@ func DeleteWebsite(webRepo website.Repository) http.Handler {
 		err = webRepo.Delete(id)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if request.Header.Get("HX-Request") != "" {
+			writer.WriteHeader(http.StatusOK)
 			return
 		}
 

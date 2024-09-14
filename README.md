@@ -4,14 +4,13 @@ Simple tool to monitor multiple URLs
 
 ## TODO
 
-- [ ] add HTMX
+- [x] add HTMX
 - [x] Create Website View
 - [x] Website View: add health-check historic table
 - [ ] Website View: add option to toggle cache bypass setting?
 - [ ] Website View: add option to disable crawling
 - [ ] Unit test crawler
-- [ ] Website View: health-check historic, highlight non 200 codes
-- [ ] Website View: Show last known outage as a separate item
+- [ ] Record website outages in different table
 - [x] Website View: health-check historic, add chartjs graph
 
 ## Ideas

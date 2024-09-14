@@ -34,6 +34,18 @@ func (r websiteRequest) Valid(ctx context.Context) (problems map[string]string) 
 	return problems
 }
 
+type FormData struct {
+	Values websiteRequest
+	Errors map[string]string
+}
+
+func NewFormData() FormData {
+	return FormData{
+		Values: websiteRequest{},
+		Errors: make(map[string]string),
+	}
+}
+
 func makeUrlExists(webRepo website.Repository) func(url string) bool {
 	return func(url string) bool {
 		_, err := webRepo.GetByURL(url)
@@ -45,15 +57,15 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 	urlExists := makeUrlExists(webRepo)
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		problems := map[string]string{}
-		var newWebsiteRequest websiteRequest
+		formData := NewFormData()
 
 		if request.Method == http.MethodPost {
-			newWebsiteRequest = websiteRequest{
+			newWebsiteRequest := websiteRequest{
 				Name: request.FormValue("name"),
 				URL:  request.FormValue("url"),
 			}
-			problems = newWebsiteRequest.Valid(request.Context())
+			formData.Errors = newWebsiteRequest.Valid(request.Context())
+			formData.Values = newWebsiteRequest
 
 			newWebsite := website.Website{
 				ID:        uuid.New(),
@@ -62,29 +74,46 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 				CreatedAt: time.Now(),
 			}
 
-			if len(problems) == 0 && urlExists(newWebsite.URL) {
-				problems["url"] = "URL already exists"
+			if len(formData.Errors) == 0 && urlExists(newWebsite.URL) {
+				formData.Errors["url"] = "URL already exists"
 			}
 
-			if len(problems) == 0 {
+			if len(formData.Errors) == 0 {
 				if _, err := webRepo.Create(newWebsite); err != nil {
-					problems["form"] = fmt.Sprintln("Something went wrong while creating website. Please try again.")
+					formData.Errors["form"] = fmt.Sprintln("Something went wrong while creating website. Please try again.")
 					log.Printf("website creation error: %s", err)
 				} else {
+					if request.Header.Get("HX-Request") != "" {
+						if err := templ.ExecuteTemplate(writer, "form", NewFormData()); err != nil {
+							log.Printf("error rendering index form: %s\n", err)
+						}
+
+						if err := templ.ExecuteTemplate(writer, "oob-website-item", newWebsite); err != nil {
+							log.Printf("error rendering website-table-item: %s\n", err)
+						}
+						return
+					}
+
 					http.Redirect(writer, request, request.URL.Path, http.StatusFound)
 					return
 				}
+			}
+
+			if len(formData.Errors) > 0 && request.Header.Get("HX-Request") != "" {
+				writer.WriteHeader(http.StatusUnprocessableEntity)
+				if err := templ.ExecuteTemplate(writer, "form", formData); err != nil {
+					log.Printf("error rendering index form: %s\n", err)
+				}
+				return
 			}
 		}
 
 		data := struct {
 			Websites []website.Website
-			Problems map[string]string
-			Values   websiteRequest
+			FormData FormData
 		}{
 			Websites: []website.Website{},
-			Problems: problems,
-			Values:   newWebsiteRequest,
+			FormData: formData,
 		}
 
 		webItems, err := webRepo.All()
@@ -92,7 +121,7 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 			data.Websites = webItems
 		}
 
-		if err := templ.ExecuteTemplate(writer, "index.gohtml", data); err != nil {
+		if err := templ.ExecuteTemplate(writer, "index", data); err != nil {
 			log.Printf("error rendering index: %s\n", err)
 		}
 	})

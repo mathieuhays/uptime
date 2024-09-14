@@ -25,3 +25,10 @@ body {
 .link:focus {
     text-decoration: underline;
 }
+
+.card {
+    border: 1px solid var(--bs-gray-700);
+    border-radius: 8px;
+    padding: 1rem;
+    height: 100%;
+}

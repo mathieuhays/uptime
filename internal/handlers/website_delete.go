@@ -7,23 +7,22 @@ import (
 	"net/http"
 )
 
-func DeleteWebsite(webRepo website.Repository) http.Handler {
+type websiteDeleteRepo interface {
+	Get(id uuid.UUID) (*website.Website, error)
+	Delete(id uuid.UUID) error
+}
+
+func WebsiteDelete(webRepo websiteDeleteRepo) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		allowedMethods := map[string]struct{}{
-			http.MethodDelete: struct{}{},
-			http.MethodGet:    struct{}{},
+			http.MethodDelete: {},
+			http.MethodGet:    {},
 		}
 		if _, ok := allowedMethods[request.Method]; !ok {
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 		}
 
-		idString := request.PathValue("id")
-		if idString == "" {
-			writer.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		id, err := uuid.Parse(idString)
+		id, err := uuid.Parse(request.PathValue("id"))
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
 			return

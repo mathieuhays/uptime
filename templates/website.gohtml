@@ -87,11 +87,15 @@
     Chart.defaults.color = 'white'
 
     const chart = new Chart(ctx, {
-        type: 'bar',
+        type: 'scatter',
         data: {
             datasets: [{
                 label: 'response times',
-                data: []
+                data: [],
+                borderColor: colorize,
+                backgroundColor: colorize,
+                pointRadius: 2,
+                pointHoverRadius: 10
             }]
         },
         options: {

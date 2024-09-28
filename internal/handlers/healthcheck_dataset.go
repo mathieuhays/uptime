@@ -18,10 +18,6 @@ func HealthcheckDataset(repo healthcheckDatasetRepo) http.Handler {
 		Code int    `json:"code"`
 	}
 
-	type response struct {
-		Data map[string][]point `json:"data"`
-	}
-
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		id, err := uuid.Parse(request.PathValue("id"))
 		if err != nil {

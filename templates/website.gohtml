@@ -5,30 +5,36 @@
         {{.Website.Name}}
     </h1>
 
-    <div class="row mt-5">
-        <div class="col-12 col-md-3">
-            <p>
-                <strong>URL:</strong><br>
-                <em>{{.Website.URL}}</em>
-            </p>
-            <p>
-                <strong>Last fetched:</strong><br>
-                <em>{{with .Website.LastFetchedAt}}{{.}}{{end}}</em>
-            </p>
+    <div class="mt-5">
+        <div class="mb-4">
+            <canvas id="healthChecksChart"></canvas>
         </div>
-        <div class="col-12 col-md-9">
-            <div class="mb-4">
-                <canvas id="healthChecksChart"></canvas>
-            </div>
-            <div class="input-group">
-                <label for="chart-range" class="input-group-text">Date range:</label>
-                <select id="chart-range" class="form-select" disabled name="range" autocomplete="off">
-                    <option value="day">last 24 hours</option>
-                    <option value="week">last 7 days</option>
-                    <option value="month">last 30 days</option>
-                </select>
+        <div class="input-group">
+            <label for="chart-range" class="input-group-text">Date range:</label>
+            <select id="chart-range" class="form-select" disabled name="range" autocomplete="off">
+                <option value="day">last 24 hours</option>
+                <option value="week">last 7 days</option>
+                <option value="month">last 30 days</option>
+            </select>
+            <div class="input-group-text">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" value="summarize" id="summarize" checked>
+                    <label class="form-check-label" for="summarize">Summarize</label>
+                </div>
             </div>
         </div>
+    </div>
+
+    <div class="mt-5">
+        <h2>Info</h2>
+        <p>
+            <strong>URL:</strong><br>
+            <em>{{.Website.URL}}</em>
+        </p>
+        <p>
+            <strong>Last fetched:</strong><br>
+            <em>{{with .Website.LastFetchedAt}}{{.}}{{end}}</em>
+        </p>
     </div>
 </div>
 
@@ -37,38 +43,99 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
 <script>
-    const cache = {}
+    const cache = {
+        precise: {},
+        summary: {},
+    }
 
     function loadData() {
         const range = selector.value
+        const isSummary = summarize.checked
+        const c = cache[isSummary ? "summary" : "precise"]
 
-        if (range in cache) {
-            showRange(range)
+        if (range in c) {
+            showRange(range, isSummary)
             return
         }
 
         selector.setAttribute("disabled", "disabled")
+        summarize.setAttribute("disabled", "disabled")
 
-        fetch('/website/{{.Website.ID}}/healthcheck/dataset?range=' + range).then(res => res.json()).then((ds) => {
+        // would probably be a good idea to move the data summary processing here instead on the server
+        fetch('/website/{{.Website.ID}}/healthcheck/dataset?range=' + range + (isSummary ? '&summarize' : '')).then(res => res.json()).then((ds) => {
             selector.removeAttribute("disabled")
+            summarize.removeAttribute("disabled")
 
             if ('data' in ds) {
+                if (isSummary) {
+                    cache.summary[range] = ds.data
+                } else {
+                    cache.precise[range] = ds.data
+                }
+
                 cache[range] = ds.data
-                showRange(range)
+                showRange(range, isSummary)
             }
         })
     }
 
-    function showRange(range) {
+    function showRange(range, isSummary) {
         let unit = 'hour'
 
         if (range !== 'day') {
             unit = 'day'
         }
 
-        chart.data.datasets[0].data = cache[range]
+        if (isSummary) {
+            setSummaryData(cache.summary[range])
+        } else {
+            setPreciseData(cache.precise[range])
+        }
+
         chart.options.scales.x.time.unit = unit
         chart.update();
+    }
+
+    function setSummaryData(data) {
+        if (chart.data.datasets.length !== 3) {
+            chart.data.datasets = [
+                {
+                    label: 'average',
+                    data: [],
+                    pointStyle: false,
+                    type: 'line'
+                },
+                {
+                    label: 'max',
+                    data: [],
+                    pointStyle: false,
+                    type: 'line'
+                },
+                {
+                    label: 'min',
+                    data: [],
+                    pointStyle: false,
+                    type: 'line'
+                }
+            ]
+        }
+
+        chart.data.datasets[0].data = data["average"]
+        chart.data.datasets[1].data = data["max"]
+        chart.data.datasets[2].data = data["min"]
+    }
+
+    function setPreciseData(data) {
+        if (chart.data.datasets.length !== 1 ||
+            chart.data.datasets[0].type !== 'bar') {
+            chart.data.datasets = [{
+                label: 'response time (ms)',
+                data: [],
+                type: 'bar'
+            }]
+        }
+
+        chart.data.datasets[0].data = data
     }
 
     function colorize(ctx) {
@@ -82,23 +149,18 @@
 
     const ctx = document.getElementById("healthChecksChart");
     const selector = document.getElementById("chart-range");
+    const summarize = document.getElementById("summarize");
 
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)'
     Chart.defaults.color = 'white'
 
     const chart = new Chart(ctx, {
-        type: 'scatter',
+        type: 'bar',
         data: {
-            datasets: [{
-                label: 'response times',
-                data: [],
-                borderColor: colorize,
-                backgroundColor: colorize,
-                pointRadius: 2,
-                pointHoverRadius: 10
-            }]
+            datasets: []
         },
         options: {
+            radius: 0,
             scales: {
                 x: {
                     type: 'time',
@@ -113,12 +175,6 @@
                     suggestedMin: 0,
                     suggestedMax: 1000
                 }
-            },
-            elements: {
-                bar: {
-                    backgroundColor: colorize,
-                    borderColor: colorize,
-                }
             }
         }
     })
@@ -126,6 +182,7 @@
     loadData()
 
     selector.addEventListener("change", loadData)
+    summarize.addEventListener("change", loadData)
 </script>
 
 {{template "footer"}}

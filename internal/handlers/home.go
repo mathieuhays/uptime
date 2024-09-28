@@ -13,35 +13,45 @@ import (
 	"time"
 )
 
-type websiteRequest struct {
-	Name string
-	URL  string
+type FormData struct {
+	Values struct {
+		Name string
+		URL  string
+	}
+	Errors map[string]string
 }
 
-func (r websiteRequest) Valid(ctx context.Context) (problems map[string]string) {
+func (fd *FormData) Valid(ctx context.Context) (problems map[string]string) {
 	problems = map[string]string{}
 
-	if r.Name == "" {
+	if fd.Values.Name == "" {
 		problems["name"] = "value required"
 	}
 
-	if r.URL == "" {
+	if fd.Values.URL == "" {
 		problems["url"] = "value required"
-	} else if !strings.HasPrefix(r.URL, "http") {
+	} else if !strings.HasPrefix(fd.Values.URL, "http") {
 		problems["url"] = "invalid URL"
 	}
+
+	fd.Errors = problems
 
 	return problems
 }
 
-type FormData struct {
-	Values websiteRequest
-	Errors map[string]string
-}
+func NewFormData(r *http.Request) FormData {
+	var values struct {
+		Name string
+		URL  string
+	}
 
-func NewFormData() FormData {
+	if r.Method == http.MethodPost {
+		values.Name = r.FormValue("name")
+		values.URL = r.FormValue("url")
+	}
+
 	return FormData{
-		Values: websiteRequest{},
+		Values: values,
 		Errors: make(map[string]string),
 	}
 }
@@ -57,20 +67,15 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 	urlExists := makeUrlExists(webRepo)
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		formData := NewFormData()
+		formData := NewFormData(request)
 
 		if request.Method == http.MethodPost {
-			newWebsiteRequest := websiteRequest{
-				Name: request.FormValue("name"),
-				URL:  request.FormValue("url"),
-			}
-			formData.Errors = newWebsiteRequest.Valid(request.Context())
-			formData.Values = newWebsiteRequest
+			formData.Valid(request.Context())
 
 			newWebsite := website.Website{
 				ID:        uuid.New(),
-				Name:      newWebsiteRequest.Name,
-				URL:       website.NormalizeURL(newWebsiteRequest.URL),
+				Name:      formData.Values.Name,
+				URL:       website.NormalizeURL(formData.Values.URL),
 				CreatedAt: time.Now(),
 			}
 
@@ -84,7 +89,7 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 					log.Printf("website creation error: %s", err)
 				} else {
 					if request.Header.Get("HX-Request") != "" {
-						if err := templ.ExecuteTemplate(writer, "form", NewFormData()); err != nil {
+						if err := templ.ExecuteTemplate(writer, "form", FormData{}); err != nil {
 							log.Printf("error rendering index form: %s\n", err)
 						}
 

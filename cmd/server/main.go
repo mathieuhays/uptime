@@ -38,26 +38,26 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 
 	db, err := sql.Open("libsql", "file:"+databasePath)
 	if err != nil {
-		log.Fatalf("database error: %s", err)
+		return fmt.Errorf("database: %s", err)
 	}
 
 	if err = uptime.Migrate(db, "turso"); err != nil {
-		log.Fatalf("migration error: %s", err)
+		return fmt.Errorf("migration: %s", err)
 	}
 
 	websiteRepository, err := website.NewSQLiteRepository(db)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("website repo: %s", err)
 	}
 
 	healthCheckRepo, err := healthcheck.NewSQLiteRepository(db)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("heatlh check repo: %s", err)
 	}
 
 	templ, err := uptime.TemplateEngine()
 	if err != nil {
-		log.Fatalf("error loading templates: %s", err)
+		return fmt.Errorf("templates: %s", err)
 	}
 
 	serverHandler := uptime.NewServer(templ, websiteRepository, healthCheckRepo)
@@ -95,7 +95,7 @@ func main() {
 	}
 
 	if err := run(os.Getenv, os.Stdout, os.Stderr); err != nil {
-		log.Printf("listen err: %s\n", err)
+		log.Println(err)
 		os.Exit(1)
 	}
 

@@ -16,12 +16,6 @@
                 <option value="week">last 7 days</option>
                 <option value="month">last 30 days</option>
             </select>
-            <div class="input-group-text">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" value="summarize" id="summarize" checked>
-                    <label class="form-check-label" for="summarize">Summarize</label>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -43,121 +37,56 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
 <script>
-    const cache = {
-        precise: {},
-        summary: {},
-    }
+    const cache = {}
 
     function loadData() {
         const range = selector.value
-        const isSummary = summarize.checked
-        const c = cache[isSummary ? "summary" : "precise"]
 
-        if (range in c) {
-            showRange(range, isSummary)
+        if (range in cache) {
+            showRange(range)
             return
         }
 
         selector.setAttribute("disabled", "disabled")
-        summarize.setAttribute("disabled", "disabled")
 
         // would probably be a good idea to move the data summary processing here instead on the server
-        fetch('/website/{{.Website.ID}}/healthcheck/dataset?range=' + range + (isSummary ? '&summarize' : '')).then(res => res.json()).then((ds) => {
+        fetch('/website/{{.Website.ID}}/healthcheck/dataset?range=' + range).then(res => res.json()).then((ds) => {
             selector.removeAttribute("disabled")
-            summarize.removeAttribute("disabled")
 
             if ('data' in ds) {
-                if (isSummary) {
-                    cache.summary[range] = ds.data
-                } else {
-                    cache.precise[range] = ds.data
-                }
-
                 cache[range] = ds.data
-                showRange(range, isSummary)
+                showRange(range)
             }
         })
     }
 
-    function showRange(range, isSummary) {
+    function showRange(range) {
         let unit = 'hour'
 
         if (range !== 'day') {
             unit = 'day'
         }
 
-        if (isSummary) {
-            setSummaryData(cache.summary[range])
-        } else {
-            setPreciseData(cache.precise[range])
-        }
-
+        chart.data.datasets[0].data = cache[range]
         chart.options.scales.x.time.unit = unit
         chart.update();
     }
 
-    function setSummaryData(data) {
-        if (chart.data.datasets.length !== 3) {
-            chart.data.datasets = [
-                {
-                    label: 'average',
-                    data: [],
-                    pointStyle: false,
-                    type: 'line'
-                },
-                {
-                    label: 'max',
-                    data: [],
-                    pointStyle: false,
-                    type: 'line'
-                },
-                {
-                    label: 'min',
-                    data: [],
-                    pointStyle: false,
-                    type: 'line'
-                }
-            ]
-        }
-
-        chart.data.datasets[0].data = data["average"]
-        chart.data.datasets[1].data = data["max"]
-        chart.data.datasets[2].data = data["min"]
-    }
-
-    function setPreciseData(data) {
-        if (chart.data.datasets.length !== 1 ||
-            chart.data.datasets[0].type !== 'bar') {
-            chart.data.datasets = [{
-                label: 'response time (ms)',
-                data: [],
-                type: 'bar'
-            }]
-        }
-
-        chart.data.datasets[0].data = data
-    }
-
-    function colorize(ctx) {
-        if ('raw' in ctx && 'code' in ctx.raw) {
-            const v = ctx.raw.code
-            return v < 400 ? '#44DE28' : v >= 500 ? '#D60000' : 'orange'
-        }
-
-        return '#eee'
-    }
-
     const ctx = document.getElementById("healthChecksChart");
     const selector = document.getElementById("chart-range");
-    const summarize = document.getElementById("summarize");
 
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)'
     Chart.defaults.color = 'white'
 
     const chart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
-            datasets: []
+            datasets: [{
+                type: 'line',
+                data: [],
+                borderColor: '#f72424',
+                label: 'response time (ms)'
+            }]
         },
         options: {
             radius: 0,
@@ -175,6 +104,20 @@
                     suggestedMin: 0,
                     suggestedMax: 1000
                 }
+            },
+            plugins: {
+                decimation: {
+                    enabled: true
+                }
+            },
+            layout: {
+                autoPadding: false,
+                padding: 3
+            },
+            elements: {
+                line: {
+                    borderWidth: 1
+                }
             }
         }
     })
@@ -182,7 +125,6 @@
     loadData()
 
     selector.addEventListener("change", loadData)
-    summarize.addEventListener("change", loadData)
 </script>
 
 {{template "footer"}}

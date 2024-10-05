@@ -5,14 +5,14 @@ Simple tool to monitor multiple URLs
 
 ## TODO
 
-- [x] add HTMX
-- [x] Create Website View
-- [x] Website View: add health-check historic table
 - [ ] Website View: add option to toggle cache bypass setting?
 - [ ] Website View: add option to disable crawling
 - [ ] Unit test crawler
 - [ ] Record website outages in different table
-- [x] Website View: health-check historic, add chartjs graph
+- [ ] Record a marker on deployment
+- [ ] Website: Multi-add through comma separated list
+- [ ] Website: Import from CSV
+- [ ] Website: add ability to change the name
 
 
 ## Ideas
@@ -25,10 +25,14 @@ Simple tool to monitor multiple URLs
 
 ## Development
 
-Recommended install:
+### Tools
 
-`go install github.com/air-verse/air@latest`
+- Air: `go install github.com/air-verse/air@latest`
+- GoSec: `go install github.com/securego/gosec/v2/cmd/gosec@latest`
+- StaticCheck: `go install honnef.co/go/tools/cmd/staticcheck@latest`
 
-Running the `air` command in the root directory should compile/run the binary with auto-reloading enabled
+### Running locally
 
-The website will be accessible on `http://localhost:8081` (can also be accessed through :8080 to bypass the air proxy)
+I use the `air` command to run the app locally. It'll make the HTTP server accessible on http://localhost:8081 and handle auto-reloading.
+
+The air command should generate a tmp folder. Running the app should create an uptime.db file in there and run all the migrations.

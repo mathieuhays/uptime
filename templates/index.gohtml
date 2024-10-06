@@ -4,13 +4,22 @@
     <div class="container">
         <h2 class="mt-5">Websites</h2>
 
-        <div id="websites" class="row g-3">
-            {{if .Websites}}
-                {{range .Websites}}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Name/URL</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="websites">
+            {{if .Items}}
+                {{range .Items}}
                     {{template "website-item" .}}
                 {{end}}
             {{end}}
-        </div>
+            </tbody>
+        </table>
 
         <h2 class="mt-5 h4">Add new website</h2>
 
@@ -47,21 +56,32 @@
 {{end}}
 
 {{block "website-item" .}}
-    <div class="col-12 col-md-6 col-lg-4 website">
-        <article class="card">
-            <h2><a href="/website/{{.ID}}">{{.Name}}</a></h2>
-            <div><em>{{.URL}}</em></div>
-            <div><em>{{with .LastFetchedAt}}{{.}}{{end}}</em></div>
-            <div class="d-flex flex-row justify-content-between mt-4">
-                <a href="/website/{{.ID}}" class="btn btn-outline-info">View</a>
-                <a href="/website/{{.ID}}/delete" class="btn btn-danger" hx-delete="/website/{{.ID}}/delete" hx-target="closest .website" hx-confirm="Are you want to delete this website and all its records?">delete</a>
+    <tr class="website">
+        <td>
+            <a href="/website/{{.Website.ID}}">{{.Website.Name}}</a><br>
+            <small>{{.Website.URL}}</small>
+        </td>
+        <td>
+            {{if .HealthCheck}}
+            <span class="text-{{.ColorCode}}">{{.HealthCheck.StatusCode}}</span>
+            -
+            {{.HealthCheck.ResponseTime}}
+            {{end}}<br>
+            <em>{{with .Website.LastFetchedAt}}{{.}}{{end}}</em>
+        </td>
+        <td>
+            <div class="d-flex flex-row gap-3">
+                <a href="/website/{{.Website.ID}}" class="btn btn-outline-info">View</a>
+                <a href="/website/{{.Website.ID}}/delete" class="btn btn-danger" hx-delete="/website/{{.Website.ID}}/delete" hx-target="closest .website" hx-confirm="Are you want to delete this website and all its records?">delete</a>
             </div>
-        </article>
-    </div>
+        </td>
+    </tr>
 {{end}}
 
 {{block "oob-website-item" .}}
-    <div id="websites" hx-swap-oob="beforeend">
-        {{template "website-item" .}}
-    </div>
+    <table>
+        <tbody id="websites" hx-swap-oob="beforeend">
+            {{template "website-item" .}}
+        </tbody>
+    </table>
 {{end}}

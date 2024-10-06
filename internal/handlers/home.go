@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/mathieuhays/uptime/internal/healthcheck"
 	"github.com/mathieuhays/uptime/internal/website"
 	"html/template"
 	"log"
@@ -63,8 +64,26 @@ func makeUrlExists(webRepo website.Repository) func(url string) bool {
 	}
 }
 
-func Home(templ *template.Template, webRepo website.Repository) http.Handler {
+func statusCodeToColorCode(statusCode int) string {
+	if statusCode < 400 {
+		return "success"
+	}
+
+	if statusCode < 500 {
+		return "warning"
+	}
+
+	return "danger"
+}
+
+func Home(templ *template.Template, webRepo website.Repository, hcRepo healthcheck.Repository) http.Handler {
 	urlExists := makeUrlExists(webRepo)
+
+	type dashboardItem struct {
+		Website     website.Website
+		HealthCheck *healthcheck.HealthCheck
+		ColorCode   string
+	}
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		formData := NewFormData(request)
@@ -114,16 +133,30 @@ func Home(templ *template.Template, webRepo website.Repository) http.Handler {
 		}
 
 		data := struct {
-			Websites []website.Website
+			Items    []dashboardItem
 			FormData FormData
 		}{
-			Websites: []website.Website{},
+			Items:    []dashboardItem{},
 			FormData: formData,
 		}
 
 		webItems, err := webRepo.All()
 		if err == nil {
-			data.Websites = webItems
+			for _, item := range webItems {
+				dItem := dashboardItem{
+					Website:     item,
+					HealthCheck: nil,
+					ColorCode:   "",
+				}
+
+				hc, err2 := hcRepo.GetLatest(item.ID)
+				if err2 == nil {
+					dItem.HealthCheck = hc
+					dItem.ColorCode = statusCodeToColorCode(hc.StatusCode)
+				}
+
+				data.Items = append(data.Items, dItem)
+			}
 		}
 
 		if err := templ.ExecuteTemplate(writer, "index", data); err != nil {

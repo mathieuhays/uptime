@@ -69,7 +69,7 @@ func (r *SQLiteRepository) Create(healthCheck HealthCheck) (*HealthCheck, error)
 
 func rowToHealthCheck(row *sql.Row) (*HealthCheck, error) {
 	var healthCheck sqliteHealthCheck
-	if err := row.Scan(healthCheck.id, healthCheck.websiteID, healthCheck.statusCode, healthCheck.responseTime, healthCheck.createdAt); err != nil {
+	if err := row.Scan(&healthCheck.id, &healthCheck.websiteID, &healthCheck.statusCode, &healthCheck.responseTime, &healthCheck.createdAt); err != nil {
 		return nil, err
 	}
 

@@ -41,6 +41,8 @@ func run(getenv func(string) string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("database: %s", err)
 	}
 
+	db.SetMaxOpenConns(1)
+
 	if err = uptime.Migrate(db, "turso"); err != nil {
 		return fmt.Errorf("migration: %s", err)
 	}
